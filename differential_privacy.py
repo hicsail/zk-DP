@@ -1,6 +1,6 @@
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
-from differential_privacy.dp import add_noise
+from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
 import pandas as pd
 
@@ -15,6 +15,8 @@ if __name__ == "__main__":
 
         for col in df.columns:
             print("\nWorking on", col)
+
+            # Replace negative values and N with ave.(excl. neg values)
             preprocess(df, col)
 
             # Commit data and key
@@ -22,4 +24,5 @@ if __name__ == "__main__":
             hashed_df = poseidon_hash.hash(list(df[col]))
             _key = poseidon_hash.hash([key])
 
+            # Add noise to df
             add_noise(df, col, p, hashed_df, key)
