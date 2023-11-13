@@ -32,4 +32,4 @@ jobs:
           cd picozk
           pip install .
       - name: Run dp statement
-        run: python differential_privacy.py
+        run: python test_e2e.py

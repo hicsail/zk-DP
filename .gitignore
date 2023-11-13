@@ -1,3 +1,7 @@
 picozk
 venv
 output_*.csv
+*.rel
+*.wit
+*ins
+*.pyc
