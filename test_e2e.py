@@ -9,7 +9,7 @@ import pandas as pd
 
 class TestPicoZKEndToEnd(unittest.TestCase):
     def test_e2e_process(self):
-        p = pow(2, 61) - 1
+        p = pow(2, 127) - 1
         # https://media.githubusercontent.com/media/usnistgov/SDNist/main/nist%20diverse%20communities%20data%20excerpts/massachusetts/ma2019.csv
         df = pd.read_csv("ma2019.csv")
 
