@@ -44,7 +44,7 @@ def add_noise(df, col, p, hashed_df, key):
 
     # Add Laplace noise
     table = gen_laplace_table(sensitivity=1, p=p)
-    zk_lap_table = ZKList(table) #TODO: Clarify if we need ZKList here
+    zk_lap_table = ZKList(table)  # TODO: Clarify if we need ZKList here
 
     for i in range(len(sdf)):
         # Hash and format seed into 13 bits
