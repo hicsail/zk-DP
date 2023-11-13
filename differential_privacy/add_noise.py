@@ -33,24 +33,24 @@ def add_noise(df, col, p, hashed_df, key):
         print(" ", now, ":", num2)
         return num2
 
-    # PRF to generate a seed
-    def prf(key):
+    # Generate a seed
+    def generate_seed(key):
         num1 = key
         num2 = get_beacon()
         result = num1 ^ num2
         return SecretInt(result)
 
-    seed = prf(key)
+    seed = generate_seed(key)
 
     # Add Laplace noise
     table = gen_laplace_table(sensitivity=1, p=p)
-    zk_lap_table = ZKList(table)
+    zk_lap_table = ZKList(table)  # TODO: Clarify if we need ZKList here
 
     for i in range(len(sdf)):
         # Hash and format seed into 13 bits
-        seed_h = poseidon_hash.hash([seed])
+        seed_h = poseidon_hash.hash([seed, i])
         x = seed_h.to_binary()
-        shifted_x = x >> 48
+        shifted_x = x >> 114
 
         # create a uniform draw in [0, 1023]
         U = shifted_x.to_arithmetic()
