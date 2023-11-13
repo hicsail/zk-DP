@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 import pandas as pd
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
