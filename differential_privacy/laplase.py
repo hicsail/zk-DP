@@ -22,7 +22,8 @@ def gen_laplace_table(sensitivity, p):
         return sensitivity * np.sign(U) * np.log(1 - 2 * np.abs(U))
 
     table = []
-    for n in range(1, 2**13 - 1):  # 8191 == 12 bits of 1s
+
+    for n in range(1, 2**14 - 1):  # 16383 == 13 bits of 1s
         v = bval(bitfield(n))
         lap = lap_draw(v)
 
