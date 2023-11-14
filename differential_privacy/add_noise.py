@@ -40,23 +40,24 @@ def add_noise(df, col, p, hashed_df, key):
         result = num1 ^ num2
         return SecretInt(result)
 
-    seed = generate_seed(key)
-
     # Add Laplace noise
     table = gen_laplace_table(sensitivity=1, p=p)
-    zk_lap_table = ZKList(table)  # TODO: Clarify if we need ZKList here
+    zk_lap_table = ZKList(table)
 
-    for i in range(len(sdf)):
-        # Hash and format seed into 13 bits
+    def prf(seed):
         seed_h = poseidon_hash.hash([seed, i])
         x = seed_h.to_binary()
         shifted_x = x >> 114
 
         # create a uniform draw in [0, 1023]
         U = shifted_x.to_arithmetic()
+        return zk_lap_table[U]
 
+    seed = generate_seed(key)
+
+    for i in range(len(sdf)):
         # look up laplace sample in the table
-        lap_draw = zk_lap_table[U]
+        lap_draw = prf(seed)
         sdf_copy = df.loc[i, col]
         df.loc[i, col] = df.loc[i, col] + lap_draw
         check = df.loc[i, col] - sdf_copy - lap_draw
