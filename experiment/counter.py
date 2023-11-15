@@ -14,6 +14,6 @@ def count(s):
     line_count /= million
 
     # Print the total number of lines
-    print(f"\nSize of input: {s}, Total number of lines in the file: {line_count} 10^6")
+    print(f"\nSize of input: {s}, Total number of lines in the file: {line_count} (* 10^6)")
     
     return line_count
