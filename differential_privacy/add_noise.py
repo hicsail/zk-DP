@@ -1,11 +1,10 @@
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
-from .laplase import gen_laplace_table
 from nistbeacon import NistBeacon
 from datetime import datetime
 
 
-def add_noise(df, col, p, hashed_df, key):
+def add_noise(df, col, p, hashed_df, key, zk_lap_table):
     """
     Time1: A prover commits a data and a key and generate a private key
     Time2: A beacon generates a random integer-string, x
@@ -20,7 +19,7 @@ def add_noise(df, col, p, hashed_df, key):
     """
 
     sdf = df[col]
-    # Commit data and key
+    # Confirm the authenticity of the data
     poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
     digest = poseidon_hash.hash(list(sdf))
     assert0(digest - hashed_df)
@@ -35,14 +34,10 @@ def add_noise(df, col, p, hashed_df, key):
 
     # Generate a seed
     def generate_seed(key):
-        num1 = key
+        num1 = key.to_binary()
         num2 = get_beacon()
         result = num1 ^ num2
-        return SecretInt(result)
-
-    # Add Laplace noise
-    table = gen_laplace_table(sensitivity=1, p=p)
-    zk_lap_table = ZKList(table)
+        return result.to_arithmetic()
 
     def prf(seed, i):
         seed_h = poseidon_hash.hash([seed, i])
