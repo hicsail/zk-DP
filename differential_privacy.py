@@ -1,6 +1,7 @@
+import pandas as pd
 from picozk import *
 from differential_privacy.execute import execute
-import pandas as pd
+from differential_privacy.preprocess import preprocess
 
 if __name__ == "__main__":
     p = pow(2, 127) - 1
@@ -10,4 +11,6 @@ if __name__ == "__main__":
     key = 1987034928369859712  # TODO: Make a proper key
 
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
+        # Replace negative values and N with ave.(excl. neg values)
+        preprocess(df)
         execute(df, key, p)
