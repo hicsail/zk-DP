@@ -5,7 +5,6 @@ from .laplase import gen_laplace_table
 
 
 def execute(df, key, p, cols=None):
-
     # Secrefy Key
     key = SecretInt(key)
 

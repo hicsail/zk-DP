@@ -4,6 +4,7 @@ from picozk import *
 from differential_privacy.execute import execute
 from differential_privacy.preprocess import preprocess
 
+
 class TestPicoZKEndToEnd(unittest.TestCase):
     def test_e2e_process(self):
         p = pow(2, 127) - 1

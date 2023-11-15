@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     size = len(df)
     interval = [0.1, 0.3, 0.5, 0.7, 1.0]
-    sizes = [int(i*size) for i in interval]
+    sizes = [int(i * size) for i in interval]
     res_list = []
 
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
@@ -25,13 +25,15 @@ if __name__ == "__main__":
             line_count = count(s)
             res_list.append([s, line_count])
 
-    res_df = pd.DataFrame(res_list, columns=['Size', 'Counter'])
+    res_df = pd.DataFrame(res_list, columns=["Size", "Counter"])
 
     # Plotting
     plt.figure(figsize=(10, 6))  # You can adjust the size of the figure
-    plt.plot(res_df['Size'], res_df['Counter'], marker='o')  # marker='o' adds a circle marker to each data point
-    plt.title('IR Growth')
-    plt.xlabel('Size (s)')
-    plt.ylabel('Line Count (in 10^6)')
+    plt.plot(
+        res_df["Size"], res_df["Counter"], marker="o"
+    )  # marker='o' adds a circle marker to each data point
+    plt.title("IR Growth")
+    plt.xlabel("Size (s)")
+    plt.ylabel("Line Count (in 10^6)")
     plt.grid(True)
     plt.show()
