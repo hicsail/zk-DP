@@ -4,6 +4,7 @@ from .add_noise import add_noise
 from .preprocess import preprocess
 from .laplase import gen_laplace_table
 
+
 def execute(df, key, p, cols=None):
     # Replace negative values and N with ave.(excl. neg values)
     preprocess(df)
