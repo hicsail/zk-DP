@@ -1,5 +1,4 @@
-
-def counter():
+def count(s):
     # Define the file path
     file_path = 'irs/picozk_test.rel'
 
@@ -11,5 +10,10 @@ def counter():
         for line in file:
             line_count += 1
 
+    million = 1000000
+    line_count /= million
+
     # Print the total number of lines
-    print(f"Total number of lines in the file: {line_count}")
+    print(f"\nSize of input: {s}, Total number of lines in the file: {line_count} 10^6")
+    
+    return line_count

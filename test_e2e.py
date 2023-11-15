@@ -1,8 +1,8 @@
 import unittest
+import pandas as pd
 from picozk import *
 from differential_privacy.execute import execute
-import pandas as pd
-
+from differential_privacy.preprocess import preprocess
 
 class TestPicoZKEndToEnd(unittest.TestCase):
     def test_e2e_process(self):
@@ -14,6 +14,8 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         key = 1987034928369859712  # TODO: Make a proper key
 
         with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
+            # Replace negative values and N with ave.(excl. neg values)
+            preprocess(df)
             execute(df, key, p, cols)
 
 
