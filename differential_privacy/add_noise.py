@@ -44,7 +44,7 @@ def add_noise(df, col, p, hashed_df, key):
     table = gen_laplace_table(sensitivity=1, p=p)
     zk_lap_table = ZKList(table)
 
-    def prf(seed):
+    def prf(seed, i):
         seed_h = poseidon_hash.hash([seed, i])
         x = seed_h.to_binary()
         shifted_x = x >> 114
@@ -57,7 +57,7 @@ def add_noise(df, col, p, hashed_df, key):
 
     for i in range(len(sdf)):
         # look up laplace sample in the table
-        lap_draw = prf(seed)
+        lap_draw = prf(seed, i)
         sdf_copy = df.loc[i, col]
         df.loc[i, col] = df.loc[i, col] + lap_draw
         check = df.loc[i, col] - sdf_copy - lap_draw
