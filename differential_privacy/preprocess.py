@@ -3,21 +3,22 @@ import pandas as pd
 import numpy as np
 
 
-def preprocess(df, col):
-    if col == "PUMA":
-        mapping = {
-            "25-00703": 0,
-            "25-00503": 1,
-            "25-01300": 2,
-            "25-02800": 3,
-            "25-01000": 4,
-        }
+def preprocess(df):
+    for col in df.columns:
+        if col == "PUMA":
+            mapping = {
+                "25-00703": 0,
+                "25-00503": 1,
+                "25-01300": 2,
+                "25-02800": 3,
+                "25-01000": 4,
+            }
 
-        df[col] = df[col].replace(mapping)
+            df[col] = df[col].replace(mapping)
 
-    else:
-        fillnas(df, col)
-    df[col] = df[col].apply(SecretInt)
+        else:
+            fillnas(df, col)
+        df[col] = df[col].apply(SecretInt)
 
 
 def fillnas(df, col):
