@@ -1,8 +1,9 @@
 from permKey import key_perm
-from tables import s_box, init_perm_table, final_perm_table
+from tables import s_box, init_perm_table, final_perm_table, e_bit_select_table
 from utils import *
 
-class DES():
+#ref: https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf
+class DES(): 
 
     def __init__(self, input_list, bit_list_key):
       self.input_list = input_list
@@ -65,11 +66,10 @@ class DES():
       assert len(out_sbox) == 32
       return out_sbox
 
-    #TODO Research and follow a specific pattern
-    def expand_bits(self, x):
-      _x = x[:16]
-      expanded_x = x + _x
-      return expanded_x
+
+    def expand_bits(self, bits):
+      expanded_bits = [bits[x-1] for x in e_bit_select_table]
+      return expanded_bits
 
 
     def feistel_net(self, n_list, decrypt=False):
