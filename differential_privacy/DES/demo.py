@@ -25,5 +25,13 @@ print(f'encrypted value :{enc_val}')
 
 
 # DEC decryption
-dec_val, dec_list= DES.decrypt(enc_lis, DES.key_set)
+dec_val, dec_list= DES.decrypt()
 print(f'decrypted value :{dec_val}')
+
+
+# Simple tests
+test_input = [i for i in range(64)]
+permed = DES.init_perm(test_input)
+repermed = DES.last_perm(permed)
+
+assert test_input == repermed
