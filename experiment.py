@@ -29,9 +29,7 @@ if __name__ == "__main__":
 
     # Plotting
     plt.figure(figsize=(10, 6))  # You can adjust the size of the figure
-    plt.plot(
-        res_df["Size"], res_df["Counter"], marker="o"
-    )  # marker='o' adds a circle marker to each data point
+    plt.plot(res_df["Size"], res_df["Counter"], marker="o")  # marker='o' adds a circle marker to each data point
     plt.title("IR Growth")
     plt.xlabel("Size (s)")
     plt.ylabel("Line Count (in 10^6)")
