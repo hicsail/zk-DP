@@ -17,21 +17,17 @@ def generate_bit(size):
     return bit, bit_list
 
 
-def sign(one, two):
-
+def xor(one, two):
   if len(one)>len(two):
     two = [0 for _ in range(len(one) - len(two))] + two
   elif len(one)<len(two):
     one = [0 for _ in range(len(two) - len(one))] + one
+  assert len(one) == len(two)
 
-  assert len(one) == len(two) #TODO: Make this more flexy
-  signed_x_list = [0 for _ in range(len(one))]
+  xor_ed = [0 for _ in range(len(one))]
   for i, (x, k) in enumerate(zip(one, two)):
       if int(x) - int(k) !=0:
-        signed_x_list[i] = 1
+        xor_ed[i] = 1
       else:
-        signed_x_list[i] = 0
-  return signed_x_list
-
-assert sign([0, 1, 1, 0], [1, 0, 1, 0]) == [1, 1, 0, 0]
-assert sign([0, 1, 0, 1, 1, 0], [1, 0, 1, 0]) == [0, 1, 1, 1, 0, 0]
+        xor_ed[i] = 0
+  return xor_ed
