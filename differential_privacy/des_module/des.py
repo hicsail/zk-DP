@@ -6,7 +6,6 @@ from .utils import *
 class DES:
     def __init__(self):
         self.key_schedule = None
-        
 
     # Key expansion from 56 bits key to n_keys sets of 48 bits key
     def key_expansion(self, bit_key):
@@ -35,9 +34,9 @@ class DES:
         for i in range(len(split_xored_r)):
             s_input = split_xored_r[i]
 
-            outer = 2*s_input[0] + s_input[-1]
-            middle = 8*s_input[1] + 4*s_input[2] + 2*s_input[3] + s_input[4]
-            s_val = sbox[i][val_of(outer)][val_of(middle)] #TODO Fx this (Flatten sbox and ref by multiplication)
+            outer = 2 * s_input[0] + s_input[-1]
+            middle = 8 * s_input[1] + 4 * s_input[2] + 2 * s_input[3] + s_input[4]
+            s_val = sbox[i][val_of(outer)][val_of(middle)]  # TODO Fx this (Flatten sbox and ref by multiplication)
             res = int_to_bitlist(s_val, 4)
             sboxed += res
         return sboxed
@@ -90,8 +89,7 @@ class DES:
         return n_list
 
     def encrypt(self, input_list, bit_key):
-        
-        self.key_schedule =  self.key_expansion(bit_key)
+        self.key_schedule = self.key_expansion(bit_key)
         # Initial Permutation of input
         enc_list = self.permutate(input_list, init_perm_table)
 
@@ -104,8 +102,7 @@ class DES:
         return list_to_binary(enc_list), enc_list
 
     def decrypt(self, enc_list, bit_key):
-        
-        self.key_schedule =  self.key_expansion(bit_key)
+        self.key_schedule = self.key_expansion(bit_key)
         # Initial Permutation of input
         dec_list = self.permutate(enc_list, init_perm_table)
 

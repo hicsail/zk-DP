@@ -4,7 +4,7 @@ from tables import *
 from des import DES
 
 # Generate 56bits key and expand
-orig_key_size = 64  
+orig_key_size = 64
 # key, bit_list_key = generate_bit(orig_key_size)
 key = 8289481480542705629
 # fmt: off

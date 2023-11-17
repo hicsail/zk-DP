@@ -18,13 +18,13 @@ class TestPicoZKEndToEnd(unittest.TestCase):
             if len(keys) > 64:
                 keys[i] = key[:64]
             elif len(keys) < 64:
-                keys[i] = [0 for _ in range(64-len(key))] + key
+                keys[i] = [0 for _ in range(64 - len(key))] + key
             assert len(keys[i]) == 64
 
         with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
             # Replace negative values and N with ave.(excl. neg values)
             preprocess(df)
-            
+
             poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
             _key = poseidon_hash.hash(keys[0])
             _key = poseidon_hash.hash(keys[1])

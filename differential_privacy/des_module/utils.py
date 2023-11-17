@@ -1,11 +1,13 @@
 import random
 from picozk import *
 
+
 def list_to_binary(_list):
     res = 0
     for p in range(len(_list)):
-        res += _list[p] * (2 ** (len(_list) -1 - p))
+        res += _list[p] * (2 ** (len(_list) - 1 - p))
     return res
+
 
 def int_to_bitlist(num, size=None):
     if size is None:
@@ -13,7 +15,7 @@ def int_to_bitlist(num, size=None):
     else:
         res = []
         for p in range(size - 1, -1, -1):
-            scale = 2** p
+            scale = 2**p
             res.append(mux(scale < num, 1, 0))
             num -= scale
         return res

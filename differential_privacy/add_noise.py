@@ -4,6 +4,7 @@ from nistbeacon import NistBeacon
 from datetime import datetime
 from .des_module.des import DES
 
+
 def add_noise(df, col, p, hashed_df, keys, zk_lap_table):
     """
     Time1: A prover commits a data and a key and generate a private key
@@ -32,32 +33,28 @@ def add_noise(df, col, p, hashed_df, keys, zk_lap_table):
         print(" ", now, ":", beacon)
         beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
         if len(beacon) < 64:
-            beacon = [0 for _ in range(64-len(beacon))] + beacon
+            beacon = [0 for _ in range(64 - len(beacon))] + beacon
         else:
             beacon = beacon[:64]
         assert len(beacon) == 64
         return beacon
 
-
     def shrink_bits(bit_list, size):
-        
         bin_list = bit_list[:size]
-        
+
         reduced_bits = 0
         for i in range(size - 1, -1, -1):
             reduced_bits += 2 ** (i) * bin_list[i]
 
         return reduced_bits
 
-
     def prf(keys, beacon):
-        DES_inst = DES() # Demonstrating triple DES
+        DES_inst = DES()  # Demonstrating triple DES
         _, enc_lis = DES_inst.encrypt(beacon, keys[1])
         _, dec_lis = DES_inst.decrypt(enc_lis, keys[1])
         _, fin_enc_lis = DES_inst.encrypt(dec_lis, keys[2])
         return shrink_bits(fin_enc_lis, 13)
 
-    
     for i in range(len(sdf)):
         print(i, end="\r")
         # look up laplace sample in the table
