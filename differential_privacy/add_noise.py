@@ -3,6 +3,7 @@ from picozk.poseidon_hash import PoseidonHash
 from nistbeacon import NistBeacon
 from datetime import datetime
 
+
 def add_noise(df, col, p, hashed_df, key, zk_lap_table):
     """
     Time1: A prover commits a data and a key and generate a private key
@@ -45,27 +46,26 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
         for i, (x, k) in enumerate(zip(key, beacon)):
             xor_ed[i] = mux(x - k == 0, 0, 1)
         return xor_ed
-    
+
     # Generate a seed
     def generate_seed(key):
         beacon = get_beacon()
-        beacon = [int(x) for x in bin(beacon)[2:]] # To binary list
+        beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
         return xor(key, beacon)
 
-    
     def shrink_bits(s_int, size):
-        max_int = (2**(size+1)) - 1
+        max_int = (2 ** (size + 1)) - 1
         remove = s_int - max_int
         s_int -= remove
 
-        bin_list =[]
-        for i in range(size - 1, -1, -1): #TODO: Fix this as we know size of int
+        bin_list = []
+        for i in range(size - 1, -1, -1):  # TODO: Fix this as we know size of int
             bin_list.append(mux(s_int > 2**i, 1, 0))
             s_int -= 2**i
-        
+
         reduced_bits = 0
         for i in range(size - 1, -1, -1):
-            reduced_bits+=2**(i)*bin_list[i]
+            reduced_bits += 2 ** (i) * bin_list[i]
 
         return reduced_bits
 
@@ -76,10 +76,10 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
     seed = generate_seed(key)
 
     for i in range(len(sdf)):
-        print(i, end='\r')
+        print(i, end="\r")
         # look up laplace sample in the table
         U = prf(seed, i)
-                
+
         # Draw from lap distribution
         lap_draw = zk_lap_table[U]
 
