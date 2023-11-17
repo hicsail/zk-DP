@@ -7,11 +7,11 @@ class DES:
     def __init__(self, input_list, bit_key):
         self.input_list = input_list
         self.enc_list = []
-        self.key_set = self.key_expansion(bit_key)
+        self.key_schedule = self.key_expansion(bit_key)
 
     # Key expansion from 56 bits key to n_keys sets of 48 bits key
     def key_expansion(self, bit_key):
-        res = []
+        key_schedule = []
 
         # Permuted choice 1
         c_key = [bit_key[x - 1] for x in pc_1_c]
@@ -24,9 +24,9 @@ class DES:
             concat_key = c_key + d_key
             generated_key = [concat_key[x - 1] for x in pc_2_perm_table]
             assert len(generated_key) == 48
-            res.append(generated_key)
-        assert len(res) == 16
-        return res
+            key_schedule.append(generated_key)
+        assert len(key_schedule) == 16
+        return key_schedule
 
     def permutate(self, input_list, perm_table):
         return [input_list[x - 1] for x in perm_table]
@@ -55,9 +55,9 @@ class DES:
 
             # Ensure the key schedule is reversed in decryption
             if decrypt == False:
-                sub_key = self.key_set[it]
+                sub_key = self.key_schedule[it]
             else:
-                sub_key = self.key_set[15 - it]
+                sub_key = self.key_schedule[15 - it]
 
             ## XOR with 48 bits Key
             xored_r = xor(expanded_r, sub_key)

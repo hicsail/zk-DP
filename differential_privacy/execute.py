@@ -9,7 +9,7 @@ def execute(df, key, p, cols=None):
     table = gen_laplace_table(sensitivity=1, p=p)
     zk_lap_table = ZKList(table)
     poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-    _key = poseidon_hash.hash([key])
+    _key = poseidon_hash.hash(list(key))
 
     if cols is None:
         cols = df.columns

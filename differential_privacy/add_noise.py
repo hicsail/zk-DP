@@ -2,7 +2,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from nistbeacon import NistBeacon
 from datetime import datetime
-
+import time
 
 def add_noise(df, col, p, hashed_df, key, zk_lap_table):
     """
@@ -32,15 +32,29 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
         print(" ", now, ":", num2)
         return num2
 
+    def xor(key, beacon):
+        if len(key) > len(beacon):
+            beacon = [0 for _ in range(len(key) - len(beacon))] + beacon
+        elif len(key) < len(beacon):
+            padd = [0 for _ in range(len(beacon) - len(key))]
+            for o in key:
+                padd.append(o)
+            key = padd
+        assert len(key) == len(beacon)
+
+        xor_ed = [0 for _ in range(len(key))]
+        for i, (x, k) in enumerate(zip(key, beacon)):
+            xor_ed[i] = mux(x - k == 0, 0, 1)
+        return xor_ed
+    
     # Generate a seed
     def generate_seed(key):
-        num1 = key.to_binary()
-        num2 = get_beacon()
-        result = num1 ^ num2
-        return result.to_arithmetic()
+        beacon = get_beacon()
+        beacon = [int(x) for x in bin(beacon)[2:]] # To binary list
+        return xor(key, beacon)
 
     def prf(seed, i):
-        seed_h = poseidon_hash.hash([seed, i])
+        seed_h = poseidon_hash.hash(list(seed + [i]))
         x = seed_h.to_binary()
         shifted_x = x >> 114
 
@@ -51,6 +65,7 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
     seed = generate_seed(key)
 
     for i in range(len(sdf)):
+        print(i, end='\r')
         # look up laplace sample in the table
         lap_draw = prf(seed, i)
         sdf_copy = df.loc[i, col]
