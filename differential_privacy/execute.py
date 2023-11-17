@@ -5,7 +5,6 @@ from .laplase import gen_laplace_table
 
 
 def execute(df, key, p, cols=None):
-
     # Create laplase table
     table = gen_laplace_table(sensitivity=1, p=p)
     zk_lap_table = ZKList(table)
