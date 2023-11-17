@@ -3,7 +3,6 @@ from picozk import *
 
 def list_to_binary(_list):
     res = 0
-    print(res)
     for p in range(len(_list)):
         res += _list[p] * (2 ** (len(_list) -1 - p))
     return res

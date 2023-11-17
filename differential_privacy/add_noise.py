@@ -2,7 +2,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from nistbeacon import NistBeacon
 from datetime import datetime
-
+from .des_module.des import DES
 
 def add_noise(df, col, p, hashed_df, key, zk_lap_table):
     """
@@ -26,32 +26,37 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
 
     def get_beacon():
         beaconVal = NistBeacon.get_last_record()
-        num2_hex = beaconVal.output_value
-        num2 = int(num2_hex, 16) % p  # Convert hexadecimal string to integer
+        beacon_hex = beaconVal.output_value
+        beacon = int(beacon_hex, 16) % p  # Convert hexadecimal string to integer
         now = datetime.now()
-        print(" ", now, ":", num2)
-        return num2
-
-    def xor(key, beacon):
-        if len(key) > len(beacon):
-            beacon = [0 for _ in range(len(key) - len(beacon))] + beacon
-        elif len(key) < len(beacon):
-            padd = [0 for _ in range(len(beacon) - len(key))]
-            for o in key:
-                padd.append(o)
-            key = padd
-        assert len(key) == len(beacon)
-
-        xor_ed = [0 for _ in range(len(key))]
-        for i, (x, k) in enumerate(zip(key, beacon)):
-            xor_ed[i] = mux(x - k == 0, 0, 1)
-        return xor_ed
-
-    # Generate a seed
-    def generate_seed(key):
-        beacon = get_beacon()
+        print(" ", now, ":", beacon)
         beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
-        return xor(key, beacon)
+        if len(beacon) < 64:
+            beacon = [0 for _ in range(64-len(beacon))] + beacon
+        else:
+            beacon = beacon[:64]
+        assert len(beacon) == 64
+        return beacon
+
+    # def xor(key, beacon):
+    #     if len(key) > len(beacon):
+    #         beacon = [0 for _ in range(len(key) - len(beacon))] + beacon
+    #     elif len(key) < len(beacon):
+    #         padd = [0 for _ in range(len(beacon) - len(key))]
+    #         for o in key:
+    #             padd.append(o)
+    #         key = padd
+    #     assert len(key) == len(beacon)
+
+    #     xor_ed = [0 for _ in range(len(key))]
+    #     for i, (x, k) in enumerate(zip(key, beacon)):
+    #         xor_ed[i] = mux(x - k == 0, 0, 1)
+    #     return xor_ed
+
+    # # Generate a seed
+    # def generate_seed(key):
+    #     beacon = get_beacon()
+    #     return xor(key, beacon)
 
     def shrink_bits(s_int, size):
         max_int = (2 ** (size + 1)) - 1
@@ -69,16 +74,17 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
 
         return reduced_bits
 
-    def prf(seed, i):
-        seed_h = poseidon_hash.hash(list(seed + [i]))
-        return shrink_bits(seed_h, 13)
+    def prf(seed, beacon):
+        DES_inst = DES(seed, beacon)
+        enc_val, enc_lis = DES_inst.encrypt()
+        # seed_h = poseidon_hash.hash(list(seed + [i]))
+        return shrink_bits(enc_val, 13)
 
-    seed = generate_seed(key)
-
+    
     for i in range(len(sdf)):
         print(i, end="\r")
         # look up laplace sample in the table
-        U = prf(seed, i)
+        U = prf(key, get_beacon())
 
         # Draw from lap distribution
         lap_draw = zk_lap_table[U]

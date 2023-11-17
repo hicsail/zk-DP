@@ -1,5 +1,5 @@
-from tables import *
-from utils import *
+from .tables import *
+from .utils import *
 
 
 # ref: https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf

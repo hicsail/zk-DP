@@ -21,7 +21,6 @@ assert len(bit_list_key) == orig_key_size
 
 
 a0 = list_to_binary(bit_list_key)
-print(a0)
 assert a0 == 8289481480542705629
             
 # Generate 64 bits input
@@ -44,18 +43,18 @@ with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
 
     # Initiate DEC
     n_list = ZKList(n_list)
-    bit_list_key = ZKList(list(bit_list_key))
-    DES = DES(n_list, bit_list_key)
+    bit_list_key = ZKList(bit_list_key)
+    DES_inst = DES(n_list, bit_list_key)
 
 
     # DEC encryption
-    enc_val, enc_lis = DES.encrypt()
+    enc_val, enc_lis = DES_inst.encrypt()
     assert len(enc_lis) == 64
     print(f"\nencrypted value :{val_of(enc_val)}")
 
 
     # DEC decryption
-    dec_val, dec_list = DES.decrypt()
+    dec_val, dec_list = DES_inst.decrypt()
     print(f"\ninput value     :{input_val}")
     print(f"decrypted value :{val_of(dec_val)}")
     assert input_val == val_of(dec_val)

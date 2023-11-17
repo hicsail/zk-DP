@@ -12,7 +12,10 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         df = pd.read_csv("ma2019.csv")
         cols = ["PUMA", "NPF"]
         key = 1987034928369859712  # TODO: Make a proper key
-        key = [int(x) for x in bin(key)[2:]]
+        key = [int(x) for x in bin(key)[2:]][:64] #TODO: Fix this
+        if len(key) < 64:
+            key = [0 for _ in range(64-len(key))] + key
+        assert len(key) == 64
 
         with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
             # Replace negative values and N with ave.(excl. neg values)
