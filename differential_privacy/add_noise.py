@@ -4,7 +4,7 @@ from nistbeacon import NistBeacon
 from datetime import datetime
 from .des_module.des import DES
 
-def add_noise(df, col, p, hashed_df, key, zk_lap_table):
+def add_noise(df, col, p, hashed_df, keys, zk_lap_table):
     """
     Time1: A prover commits a data and a key and generate a private key
     Time2: A beacon generates a random integer-string, x
@@ -38,53 +38,30 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
         assert len(beacon) == 64
         return beacon
 
-    # def xor(key, beacon):
-    #     if len(key) > len(beacon):
-    #         beacon = [0 for _ in range(len(key) - len(beacon))] + beacon
-    #     elif len(key) < len(beacon):
-    #         padd = [0 for _ in range(len(beacon) - len(key))]
-    #         for o in key:
-    #             padd.append(o)
-    #         key = padd
-    #     assert len(key) == len(beacon)
 
-    #     xor_ed = [0 for _ in range(len(key))]
-    #     for i, (x, k) in enumerate(zip(key, beacon)):
-    #         xor_ed[i] = mux(x - k == 0, 0, 1)
-    #     return xor_ed
-
-    # # Generate a seed
-    # def generate_seed(key):
-    #     beacon = get_beacon()
-    #     return xor(key, beacon)
-
-    def shrink_bits(s_int, size):
-        max_int = (2 ** (size + 1)) - 1
-        remove = s_int - max_int
-        s_int -= remove
-
-        bin_list = []
-        for i in range(size - 1, -1, -1):  # TODO: Fix this as we know size of int
-            bin_list.append(mux(s_int > 2**i, 1, 0))
-            s_int -= 2**i
-
+    def shrink_bits(bit_list, size):
+        
+        bin_list = bit_list[:size]
+        
         reduced_bits = 0
         for i in range(size - 1, -1, -1):
             reduced_bits += 2 ** (i) * bin_list[i]
 
         return reduced_bits
 
-    def prf(seed, beacon):
-        DES_inst = DES(seed, beacon)
-        enc_val, enc_lis = DES_inst.encrypt()
-        # seed_h = poseidon_hash.hash(list(seed + [i]))
-        return shrink_bits(enc_val, 13)
+
+    def prf(keys, beacon):
+        DES_inst = DES() # Demonstrating triple DES
+        _, enc_lis = DES_inst.encrypt(beacon, keys[1])
+        _, dec_lis = DES_inst.decrypt(enc_lis, keys[1])
+        _, fin_enc_lis = DES_inst.encrypt(dec_lis, keys[2])
+        return shrink_bits(fin_enc_lis, 13)
 
     
     for i in range(len(sdf)):
         print(i, end="\r")
         # look up laplace sample in the table
-        U = prf(key, get_beacon())
+        U = prf(keys, get_beacon())
 
         # Draw from lap distribution
         lap_draw = zk_lap_table[U]

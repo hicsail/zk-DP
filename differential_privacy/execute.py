@@ -4,12 +4,10 @@ from .add_noise import add_noise
 from .laplase import gen_laplace_table
 
 
-def execute(df, key, p, cols=None):
+def execute(df, keys, p, cols=None):
     # Create laplase table
     table = gen_laplace_table(sensitivity=1, p=p)
     zk_lap_table = ZKList(table)
-    poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-    _key = poseidon_hash.hash(list(key))
 
     if cols is None:
         cols = df.columns
@@ -22,4 +20,4 @@ def execute(df, key, p, cols=None):
         hashed_df = poseidon_hash.hash(list(df[col]))
 
         # Add noise to df
-        add_noise(df, col, p, hashed_df, key, zk_lap_table)
+        add_noise(df, col, p, hashed_df, keys, zk_lap_table)

@@ -4,10 +4,9 @@ from .utils import *
 
 # ref: https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf
 class DES:
-    def __init__(self, input_list, bit_key):
-        self.input_list = input_list
-        self.enc_list = []
-        self.key_schedule = self.key_expansion(bit_key)
+    def __init__(self):
+        self.key_schedule = None
+        
 
     # Key expansion from 56 bits key to n_keys sets of 48 bits key
     def key_expansion(self, bit_key):
@@ -90,21 +89,25 @@ class DES:
 
         return n_list
 
-    def encrypt(self):
+    def encrypt(self, input_list, bit_key):
+        
+        self.key_schedule =  self.key_expansion(bit_key)
         # Initial Permutation of input
-        self.enc_list = self.permutate(self.input_list, init_perm_table)
+        enc_list = self.permutate(input_list, init_perm_table)
 
         # Feistel Net ** Repeat 16 times of this round function
-        self.enc_list = self.feistel_net(self.enc_list, decrypt=False)
+        enc_list = self.feistel_net(enc_list, decrypt=False)
 
         # Final Permutation (Reverse of Initial Permutation)
-        self.enc_list = self.permutate(self.enc_list, final_perm_table)
+        enc_list = self.permutate(enc_list, final_perm_table)
 
-        return list_to_binary(self.enc_list), self.enc_list
+        return list_to_binary(enc_list), enc_list
 
-    def decrypt(self):
+    def decrypt(self, enc_list, bit_key):
+        
+        self.key_schedule =  self.key_expansion(bit_key)
         # Initial Permutation of input
-        dec_list = self.permutate(self.enc_list, init_perm_table)
+        dec_list = self.permutate(enc_list, init_perm_table)
 
         # Reverse Feistel Net
         dec_list = self.feistel_net(dec_list, decrypt=True)
