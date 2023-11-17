@@ -2,7 +2,6 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from nistbeacon import NistBeacon
 from datetime import datetime
-import time
 
 def add_noise(df, col, p, hashed_df, key, zk_lap_table):
     """
@@ -53,21 +52,38 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
         beacon = [int(x) for x in bin(beacon)[2:]] # To binary list
         return xor(key, beacon)
 
+    
+    def shrink_bits(s_int, size):
+        max_int = (2**(size+1)) - 1
+        remove = s_int - max_int
+        s_int -= remove
+
+        bin_list =[]
+        for i in range(size - 1, -1, -1): #TODO: Fix this as we know size of int
+            bin_list.append(mux(s_int > 2**i, 1, 0))
+            s_int -= 2**i
+        
+        reduced_bits = 0
+        for i in range(size - 1, -1, -1):
+            reduced_bits+=2**(i)*bin_list[i]
+
+        return reduced_bits
+
     def prf(seed, i):
         seed_h = poseidon_hash.hash(list(seed + [i]))
-        x = seed_h.to_binary()
-        shifted_x = x >> 114
-
-        # create a uniform draw in [0, 1023]
-        U = shifted_x.to_arithmetic()
-        return zk_lap_table[U]
+        return shrink_bits(seed_h, 13)
 
     seed = generate_seed(key)
 
     for i in range(len(sdf)):
         print(i, end='\r')
         # look up laplace sample in the table
-        lap_draw = prf(seed, i)
+        U = prf(seed, i)
+                
+        # Draw from lap distribution
+        lap_draw = zk_lap_table[U]
+
+        # Add noise to data
         sdf_copy = df.loc[i, col]
         df.loc[i, col] = df.loc[i, col] + lap_draw
         check = df.loc[i, col] - sdf_copy - lap_draw
