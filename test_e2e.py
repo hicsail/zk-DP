@@ -17,6 +17,8 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
             # Replace negative values and N with ave.(excl. neg values)
             preprocess(df)
+            # Secrefy Key
+            key = SecretInt(key)
             execute(df, key, p, cols)
 
 

@@ -19,6 +19,8 @@ if __name__ == "__main__":
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
         # Replace negative values and N with ave.(excl. neg values)
         preprocess(df)
+        # Secrefy Key
+        key = SecretInt(key)
         for s in sizes:
             _df = df.iloc[:s].copy()
             execute(_df, key, p)
