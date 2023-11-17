@@ -14,7 +14,7 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         key = 1987034928369859712  # TODO: Make a proper key
         key = [int(x) for x in bin(key)[2:]]
 
-        with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
+        with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
             # Replace negative values and N with ave.(excl. neg values)
             preprocess(df)
             # Secrefy Key

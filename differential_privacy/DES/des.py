@@ -35,9 +35,10 @@ class DES:
         sboxed = []
         for i in range(len(split_xored_r)):
             s_input = split_xored_r[i]
-            outer = int(str(s_input[0]) + str(s_input[-1]), 2)
-            middle = int(str(s_input[1]) + str(s_input[2]) + str(s_input[3]) + str(s_input[4]), 2)
-            s_val = sbox[i][outer][middle]
+
+            outer = 2*s_input[0] + s_input[-1]
+            middle = 8*s_input[1] + 4*s_input[2] + 2*s_input[3] + s_input[4]
+            s_val = sbox[i][val_of(outer)][val_of(middle)] #TODO Fx this (Flatten sbox and ref by multiplication)
             res = int_to_bitlist(s_val, 4)
             sboxed += res
         return sboxed
