@@ -2,10 +2,9 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from nistbeacon import NistBeacon
 from datetime import datetime
-from .des_module.des import DES
 
 
-def add_noise(df, col, p, hashed_df, keys, zk_lap_table):
+def add_noise(df, col, p, hashed_df, zk_lap_table, DES_inst):
     """
     Time1: A prover commits a data and a key and generate a private key
     Time2: A beacon generates a random integer-string, x
@@ -48,17 +47,14 @@ def add_noise(df, col, p, hashed_df, keys, zk_lap_table):
 
         return reduced_bits
 
-    def prf(keys, beacon):
-        DES_inst = DES()  # Demonstrating triple DES
-        _, enc_lis = DES_inst.encrypt(beacon, keys[1])
-        _, dec_lis = DES_inst.decrypt(enc_lis, keys[1])
-        _, fin_enc_lis = DES_inst.encrypt(dec_lis, keys[2])
-        return shrink_bits(fin_enc_lis, 13)
+    def prf(beacon):
+        _, enc_lis = DES_inst.encrypt(beacon)
+        return shrink_bits(enc_lis, 13)
 
     for i in range(len(sdf)):
         print(i, end="\r")
         # look up laplace sample in the table
-        U = prf(keys, get_beacon())
+        U = prf(get_beacon())
 
         # Draw from lap distribution
         lap_draw = zk_lap_table[U]
@@ -69,3 +65,5 @@ def add_noise(df, col, p, hashed_df, keys, zk_lap_table):
         check = df.loc[i, col] - sdf_copy - lap_draw
         assert0(check)
         assert val_of(check) == 0
+        if i == 5:
+            break

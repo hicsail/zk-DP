@@ -4,11 +4,37 @@ from .utils import *
 
 # ref: https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf
 class DES:
-    def __init__(self):
-        self.key_schedule = None
+    def __init__(self, key):
+        key = [int(x) for x in bin(key)[2:]]
+        in_keysize = 56
+        if len(key) > in_keysize:
+            key = key[:in_keysize]
+        elif len(key) < in_keysize:
+            key = [0 for _ in range(in_keysize - len(key))] + key
+        assert len(key) == in_keysize
+
+        self.key_schedule = self.key_expansion(key)
+
+    def from_56_to_64(self, bit_key):
+        assert len(bit_key) == 56
+        curr_bit = 0
+        res_key = []
+        for i, b in enumerate(bit_key):
+            curr_bit ^= b
+            res_key.append(b)
+
+            if (i + 1) % 7 == 0:
+                curr_bit ^= 1
+                res_key.append(curr_bit)
+                curr_bit = 0
+        assert len(res_key) == 64
+        return res_key
 
     # Key expansion from 56 bits key to n_keys sets of 48 bits key
     def key_expansion(self, bit_key):
+        # Expand 56 bits key to 64 bits key every 8th bits is of odd parity of preceding 7 bits
+        bit_key = self.from_56_to_64(bit_key)
+
         key_schedule = []
 
         # Permuted choice 1
@@ -88,8 +114,7 @@ class DES:
 
         return n_list
 
-    def encrypt(self, input_list, bit_key):
-        self.key_schedule = self.key_expansion(bit_key)
+    def encrypt(self, input_list):
         # Initial Permutation of input
         enc_list = self.permutate(input_list, init_perm_table)
 
@@ -101,8 +126,7 @@ class DES:
 
         return list_to_binary(enc_list), enc_list
 
-    def decrypt(self, enc_list, bit_key):
-        self.key_schedule = self.key_expansion(bit_key)
+    def decrypt(self, enc_list):
         # Initial Permutation of input
         dec_list = self.permutate(enc_list, init_perm_table)
 

@@ -1,10 +1,10 @@
 from picozk import *
 from des_module.utils import *
 from des_module.tables import *
-from des_module.des import DES
+from des_module.triple_des import triple_DES
 
-# Generate max 56bits key
-key = 8289481480542705629
+# Generate 3 sets of max 56bits keys
+keys = [8289481480542705629, 8289481480542225629, 9128814805426305629]
 
 # Generate 64 bits input
 input_size = 64
@@ -85,7 +85,7 @@ p = pow(2, 127) - 1
 with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
     # Initiate DEC
     n_list = ZKList(n_list)
-    DES_inst = DES(key)
+    DES_inst = triple_DES(keys)
 
     # DEC encryption
     enc_val, enc_lis = DES_inst.encrypt(n_list)

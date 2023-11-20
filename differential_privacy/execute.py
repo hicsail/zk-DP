@@ -4,7 +4,7 @@ from .add_noise import add_noise
 from .laplase import gen_laplace_table
 
 
-def execute(df, keys, p, cols=None):
+def execute(df, p, DES_inst, cols=None):
     # Create laplase table
     table = gen_laplace_table(sensitivity=1, p=p)
     zk_lap_table = ZKList(table)
@@ -20,4 +20,4 @@ def execute(df, keys, p, cols=None):
         hashed_df = poseidon_hash.hash(list(df[col]))
 
         # Add noise to df
-        add_noise(df, col, p, hashed_df, keys, zk_lap_table)
+        add_noise(df, col, p, hashed_df, zk_lap_table, DES_inst)
