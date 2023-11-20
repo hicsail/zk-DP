@@ -1,15 +1,17 @@
 from picozk import *
+from picozk.poseidon_hash import PoseidonHash
 import pandas as pd
 import matplotlib.pyplot as plt
 from differential_privacy.execute import execute
 from experiment.counter import count
 from differential_privacy.preprocess import preprocess
+from differential_privacy.des_module.triple_des import triple_DES
 
 if __name__ == "__main__":
     p = pow(2, 127) - 1
     # https://media.githubusercontent.com/media/usnistgov/SDNist/main/nist%20diverse%20communities%20data%20excerpts/massachusetts/ma2019.csv
     df = pd.read_csv("ma2019.csv")
-    key = 1987034928369859712
+    keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
     size = len(df)
     interval = [0.1, 0.3, 0.5, 0.7, 1.0]
@@ -17,13 +19,13 @@ if __name__ == "__main__":
     res_list = []
 
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):  # TODO: Modify so that we can experiment both posiedon hash and 3DES
+        DES_inst = triple_DES(keys)
         # Replace negative values and N with ave.(excl. neg values)
         preprocess(df)
-        # Secrefy Key
-        key = SecretInt(key)
+
         for s in sizes:
             _df = df.iloc[:s].copy()
-            execute(_df, key, p)
+            execute(_df, p, DES_inst)
             line_count = count(s)
             res_list.append([s, line_count])
 

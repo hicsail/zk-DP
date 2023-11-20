@@ -18,9 +18,7 @@ if __name__ == "__main__":
         preprocess(df)
 
         poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-        _key = poseidon_hash.hash(keys[0])
-        _key = poseidon_hash.hash(keys[1])
-        _key = poseidon_hash.hash(keys[2])
+        _key = poseidon_hash.hash(keys)
 
         # Implementation Body
         execute(df, p, DES_inst)
