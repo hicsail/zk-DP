@@ -1,5 +1,4 @@
 from picozk import *
-from picozk.poseidon_hash import PoseidonHash
 import pandas as pd
 import matplotlib.pyplot as plt
 from differential_privacy.execute import execute
