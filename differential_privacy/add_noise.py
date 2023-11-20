@@ -4,7 +4,7 @@ from nistbeacon import NistBeacon
 from datetime import datetime
 
 
-def add_noise(df, col, p, hashed_df, zk_lap_table, DES_inst):
+def add_noise(df, col, p, hashed_df, zk_lap_table, prf_func):
     """
     Time1: A prover commits a data and a key and generate a private key
     Time2: A beacon generates a random integer-string, x
@@ -48,7 +48,7 @@ def add_noise(df, col, p, hashed_df, zk_lap_table, DES_inst):
         return reduced_bits
 
     def prf(beacon):
-        _, enc_lis = DES_inst.encrypt(beacon)
+        _, enc_lis = prf_func.encrypt(beacon)
         return shrink_bits(enc_lis, 13)
 
     for i in range(len(sdf)):
