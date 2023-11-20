@@ -65,5 +65,3 @@ def add_noise(df, col, p, hashed_df, zk_lap_table, prf_func):
         check = df.loc[i, col] - sdf_copy - lap_draw
         assert0(check)
         assert val_of(check) == 0
-        if i == 5:
-            break
