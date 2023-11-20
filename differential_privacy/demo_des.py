@@ -1,7 +1,7 @@
 from picozk import *
-from utils import *
-from tables import *
-from des import DES
+from des_module.utils import *
+from des_module.tables import *
+from des_module.des import DES
 
 # Generate 56bits key and expand
 orig_key_size = 64
