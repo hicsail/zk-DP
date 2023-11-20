@@ -50,7 +50,7 @@ class DES:
             assert len(generated_key) == 48
             key_schedule.append(generated_key)
         assert len(key_schedule) == 16
-        return key_schedule
+        return [ZKList(schedule) for schedule in key_schedule]
 
     def permutate(self, input_list, perm_table):
         return [input_list[x - 1] for x in perm_table]
@@ -59,10 +59,11 @@ class DES:
         sboxed = []
         for i in range(len(split_xored_r)):
             s_input = split_xored_r[i]
-
             outer = 2 * s_input[0] + s_input[-1]
             middle = 8 * s_input[1] + 4 * s_input[2] + 2 * s_input[3] + s_input[4]
-            s_val = sbox[i][val_of(outer)][val_of(middle)]  # TODO Fx this (Flatten sbox and ref by multiplication)
+
+            sbox_idx = i * 64 + outer * 16 + middle
+            s_val = ZKList(sbox)[sbox_idx]
             res = int_to_bitlist(s_val, 4)
             sboxed += res
         return sboxed
