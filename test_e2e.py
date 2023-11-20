@@ -15,7 +15,7 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         cols = ["PUMA", "NPF"]
         keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
-        with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
+        with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
             DES_inst = triple_DES(keys)
 
             # Replace negative values and N with ave.(excl. neg values)
