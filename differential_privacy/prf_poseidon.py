@@ -1,6 +1,7 @@
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
-from .des_module.utils import get_beacon, list_to_binary, int_to_bitlist, xor
+from .des_module.utils import list_to_binary, int_to_bitlist, xor
+from .beacon import get_beacon
 
 
 class Poseidon_prf:

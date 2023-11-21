@@ -1,7 +1,6 @@
 from picozk import *
-from .des_module.utils import get_beacon
 from .des_module.triple_des import triple_DES
-
+from .beacon import get_beacon
 
 class TripleDES_prf:
     def __init__(self, keys, p):
