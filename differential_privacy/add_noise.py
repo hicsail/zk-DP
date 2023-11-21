@@ -2,6 +2,8 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from .laplase import gen_laplace_table
 
+SCALE = 1000
+
 
 def add_noise(sdf, p, hashed_df, prf_func):
     """
@@ -26,7 +28,7 @@ def add_noise(sdf, p, hashed_df, prf_func):
     histogram = ZKList([0, 0, 0, 0, 0])  # TODO Parameterize size of hist
 
     def update_hist(x):
-        histogram[x] = histogram[x] + 1000
+        histogram[x] = histogram[x] + SCALE
 
     sdf.apply(update_hist)
     print(histogram)
@@ -40,7 +42,7 @@ def add_noise(sdf, p, hashed_df, prf_func):
         U = prf_func.run(i)
 
         # Draw from lap distribution
-        lap_draw = zk_lap_table[U]
+        lap_draw = zk_lap_table[U] * SCALE
         before = histogram[i]
         histogram[i] = histogram[i] + lap_draw
         check = before + lap_draw - histogram[i]
