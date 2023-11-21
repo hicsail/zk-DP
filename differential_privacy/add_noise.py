@@ -4,6 +4,8 @@ from nistbeacon import NistBeacon
 from datetime import datetime
 from .laplase import gen_laplace_table
 
+SCALE = 1000
+
 
 def add_noise(sdf, p, hashed_df, prf_func):
     """
@@ -43,7 +45,7 @@ def add_noise(sdf, p, hashed_df, prf_func):
 
     def prf():
         _beacon = get_beacon()
-        
+
         beacon = _beacon + i
         beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
         if len(beacon) < 64:
@@ -51,16 +53,16 @@ def add_noise(sdf, p, hashed_df, prf_func):
         else:
             beacon = beacon[:64]
         assert len(beacon) == 64
-        
+
         # Encryption
-        _, seed_list= prf_func.encrypt(beacon)
+        _, seed_list = prf_func.encrypt(beacon)
         return shrink_bits(seed_list, 13)
 
     # Query the data
     histogram = ZKList([0, 0, 0, 0, 0])  # TODO Parameterize size of hist
 
     def update_hist(x):
-        histogram[x] = histogram[x] + 1000
+        histogram[x] = histogram[x] + SCALE
 
     sdf.apply(update_hist)
     print(histogram)
@@ -74,7 +76,7 @@ def add_noise(sdf, p, hashed_df, prf_func):
         U = prf(i)
 
         # Draw from lap distribution
-        lap_draw = zk_lap_table[U]
+        lap_draw = zk_lap_table[U] * SCALE
         before = histogram[i]
         histogram[i] = histogram[i] + lap_draw
         check = before + lap_draw - histogram[i]
