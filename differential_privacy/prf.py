@@ -14,6 +14,7 @@ def get_beacon(p):
     print(" ", now, ":", beacon)
     return beacon
 
+
 class Poseidon_prf:
     def __init__(self, keys, p):
         self.p = p
@@ -40,6 +41,7 @@ class Poseidon_prf:
         # Encryption
         seed_h = self.poseidon_hash.hash(seed + [i])
         return self.shrink_bits(seed_h, 13)
+
 
 class Poseidon_prf_no_fieldswicth:
     def __init__(self, keys, p):
