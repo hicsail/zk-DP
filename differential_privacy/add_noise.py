@@ -2,9 +2,10 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from nistbeacon import NistBeacon
 from datetime import datetime
+from .laplase import gen_laplace_table
 
 
-def add_noise(df, col, p, hashed_df, key, zk_lap_table):
+def add_noise(sdf, p, hashed_df, prf_func):
     """
     Time1: A prover commits a data and a key and generate a private key
     Time2: A beacon generates a random integer-string, x
@@ -18,43 +19,63 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
             assert0(data[n] + noise - Pub_data[n])
     """
 
-    sdf = df[col]
     # Confirm the authenticity of the data
     poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
     digest = poseidon_hash.hash(list(sdf))
     assert0(digest - hashed_df)
 
-    def get_beacon():
+    def get_beacon(i):
         beaconVal = NistBeacon.get_last_record()
-        num2_hex = beaconVal.output_value
-        num2 = int(num2_hex, 16) % p  # Convert hexadecimal string to integer
+        beacon_hex = beaconVal.output_value
+        beacon = int(beacon_hex, 16) % p  # Convert hexadecimal string to integer
         now = datetime.now()
-        print(" ", now, ":", num2)
-        return num2
+        print(" ", now, ":", beacon)
+        beacon += i
+        beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
+        if len(beacon) < 64:
+            beacon = [0 for _ in range(64 - len(beacon))] + beacon
+        else:
+            beacon = beacon[:64]
+        assert len(beacon) == 64
+        return beacon
 
-    # Generate a seed
-    def generate_seed(key):
-        num1 = key.to_binary()
-        num2 = get_beacon()
-        result = num1 ^ num2
-        return result.to_arithmetic()
+    def shrink_bits(bit_list, size):
+        bin_list = bit_list[:size]
 
-    def prf(seed, i):
-        seed_h = poseidon_hash.hash([seed, i])
-        x = seed_h.to_binary()
-        shifted_x = x >> 114
+        reduced_bits = 0
+        for i in range(size - 1, -1, -1):
+            reduced_bits += 2 ** (i) * bin_list[i]
 
-        # create a uniform draw in [0, 1023]
-        U = shifted_x.to_arithmetic()
-        return zk_lap_table[U]
+        return reduced_bits
 
-    seed = generate_seed(key)
+    def prf(i):
+        beacon = get_beacon(i)
+        _, enc_lis = prf_func.encrypt(beacon)
+        return shrink_bits(enc_lis, 13)
 
-    for i in range(len(sdf)):
+    # Query the data
+    histogram = ZKList([0, 0, 0, 0, 0])  # TODO Parameterize size of hist
+
+    def update_hist(x):
+        histogram[x] = histogram[x] + 1000
+
+    sdf.apply(update_hist)
+    print(histogram)
+
+    laplace_table = gen_laplace_table(sensitivity=1, p=p)
+    zk_lap_table = ZKList(laplace_table)
+
+    for i in range(len(histogram)):
+        print(i, end="\r")
         # look up laplace sample in the table
-        lap_draw = prf(seed, i)
-        sdf_copy = df.loc[i, col]
-        df.loc[i, col] = df.loc[i, col] + lap_draw
-        check = df.loc[i, col] - sdf_copy - lap_draw
+        U = prf(i)
+
+        # Draw from lap distribution
+        lap_draw = zk_lap_table[U]
+        before = histogram[i]
+        histogram[i] = histogram[i] + lap_draw
+        check = before + lap_draw - histogram[i]
         assert0(check)
         assert val_of(check) == 0
+
+    print(histogram)
