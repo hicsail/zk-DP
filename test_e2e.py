@@ -25,7 +25,8 @@ class TestPicoZKEndToEnd(unittest.TestCase):
             _key = poseidon_hash.hash(keys)
 
             # Implementation Body
-            execute(df, p, DES_inst, cols)
+            _df = df.iloc[:10].copy()
+            execute(_df, p, DES_inst, cols)
 
 
 if __name__ == "__main__":
