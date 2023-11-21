@@ -30,13 +30,6 @@ def add_noise(sdf, p, hashed_df, prf_func):
         beacon = int(beacon_hex, 16) % p  # Convert hexadecimal string to integer
         now = datetime.now()
         print(" ", now, ":", beacon)
-        beacon += i
-        beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
-        if len(beacon) < 64:
-            beacon = [0 for _ in range(64 - len(beacon))] + beacon
-        else:
-            beacon = beacon[:64]
-        assert len(beacon) == 64
         return beacon
 
     def shrink_bits(bit_list, size):
@@ -48,10 +41,20 @@ def add_noise(sdf, p, hashed_df, prf_func):
 
         return reduced_bits
 
-    def prf(i):
-        beacon = get_beacon(i)
-        _, enc_lis = prf_func.encrypt(beacon)
-        return shrink_bits(enc_lis, 13)
+    def prf():
+        _beacon = get_beacon()
+        
+        beacon = _beacon + i
+        beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
+        if len(beacon) < 64:
+            beacon = [0 for _ in range(64 - len(beacon))] + beacon
+        else:
+            beacon = beacon[:64]
+        assert len(beacon) == 64
+        
+        # Encryption
+        _, seed_list= prf_func.encrypt(beacon)
+        return shrink_bits(seed_list, 13)
 
     # Query the data
     histogram = ZKList([0, 0, 0, 0, 0])  # TODO Parameterize size of hist
