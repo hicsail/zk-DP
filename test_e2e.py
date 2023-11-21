@@ -16,7 +16,6 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
         with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
-            
             # Replace negative values and N with ave.(excl. neg values)
             preprocess(df)  # TODO: Make it work only on col and row
 
@@ -30,10 +29,9 @@ class TestPicoZKEndToEnd(unittest.TestCase):
             # Implementation Body
             prf_func = TripleDES_prf(keys, p)
             add_noise(sdf, p, hashed_df, prf_func)
-            
+
             prf_func = Poseidon_prf(keys, p)
             add_noise(sdf, p, hashed_df, prf_func)
-            
 
 
 if __name__ == "__main__":
