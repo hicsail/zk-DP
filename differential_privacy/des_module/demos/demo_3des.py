@@ -25,7 +25,7 @@ assert len(n_list) == input_size
 
 p = pow(2, 127) - 1
 
-with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
+with PicoZKCompiler("../irs/picozk_test", field=[p], options=["ram"]):
     # Initiate DEC
     n_list = ZKList(n_list)
     DES_inst = triple_DES(keys)

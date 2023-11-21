@@ -3,8 +3,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
-from differential_privacy.prf_triple_des import TripleDES_prf
-from differential_privacy.prf_poseidon import Poseidon_prf
+from differential_privacy.prf import TripleDES_prf, Poseidon_prf, Poseidon_prf_no_fieldswicth
 import matplotlib.pyplot as plt
 from experiment.counter import count
 
@@ -43,6 +42,12 @@ if __name__ == "__main__":
             line_count = count(s)
             res_list.append([s, line_count, "poseidon"])
 
+            # Poseidon Hash No field Switch
+            prf_func = Poseidon_prf_no_fieldswicth(keys, p)
+            add_noise(sdf, p, hashed_df, prf_func)
+            line_count = count(s)
+            res_list.append([s, line_count, "pos_no_fieldswicth"])
+
     res_df = pd.DataFrame(res_list, columns=["Size", "Counter", "PRF"])
 
     # Plotting
@@ -54,6 +59,10 @@ if __name__ == "__main__":
     # Filter and plot for Poseidon
     poseidon_df = res_df[res_df["PRF"] == "poseidon"]
     plt.plot(poseidon_df["Size"], poseidon_df["Counter"], marker="o", label="Poseidon")
+
+    # Filter and plot for Poseidon
+    poseidon_df = res_df[res_df["PRF"] == "pos_no_fieldswicth"]
+    plt.plot(poseidon_df["Size"], poseidon_df["Counter"], marker="o", label="poseidon(no field swicth)")
 
     plt.title("IR Growth")
     plt.xlabel("Size (rows)")

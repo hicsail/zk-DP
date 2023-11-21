@@ -16,16 +16,10 @@ def int_to_bitlist(num, size=None):
         res = []
         for p in range(size - 1, -1, -1):
             scale = 2**p
-            res.append(mux(scale < num, 1, 0))
-            num -= scale
+            elem = mux(scale <= num, 1, 0)
+            res.append(elem)
+            num = mux(scale <= num, num - scale, num)
         return res
-
-
-# Generate 'size' bits
-def generate_bit(size):
-    bit = random.randint(0, 2**size)
-    bit_list = int_to_bitlist(bit, size)
-    return bit, bit_list
 
 
 def xor(one, two):
@@ -39,3 +33,10 @@ def xor(one, two):
     for i, (x, k) in enumerate(zip(one, two)):
         xor_ed[i] = mux(x - k == 0, 0, 1)
     return xor_ed
+
+
+# Generate 'size' bits
+def generate_bit(size):
+    bit = random.randint(0, 2**size)
+    bit_list = int_to_bitlist(bit, size)
+    return bit, bit_list
