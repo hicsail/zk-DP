@@ -4,7 +4,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
-from differential_privacy.prf import TripleDES_prf, Poseidon_prf
+from differential_privacy.prf import TripleDES_prf, Poseidon_prf, Poseidon_prf_no_fieldswicth
 
 
 class TestPicoZKEndToEnd(unittest.TestCase):
@@ -31,6 +31,10 @@ class TestPicoZKEndToEnd(unittest.TestCase):
 
             prf_func = Poseidon_prf(keys, p)
             add_noise(sdf, p, hashed_df, prf_func)
+
+            prf_func = Poseidon_prf_no_fieldswicth(keys, p)
+            add_noise(sdf, p, hashed_df, prf_func)
+
 
 
 if __name__ == "__main__":
