@@ -36,6 +36,10 @@ class Poseidon_prf:
             xored = xor(bi_num, beacon)
             int_xored = list_to_binary(xored)
             seed.append(int_xored)
+
+            test = val_of(key) 
+            test_obj = val_of(list_to_binary(bi_num))
+            assert test == test_obj
         return seed
 
     def run(self, i):

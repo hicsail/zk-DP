@@ -16,8 +16,9 @@ def int_to_bitlist(num, size=None):
         res = []
         for p in range(size - 1, -1, -1):
             scale = 2**p
-            res.append(mux(scale <= num, 1, 0))
-            num -= scale
+            elem = mux(scale <= num, 1, 0)
+            res.append(elem)
+            num = mux(scale <= num, num - scale, num)
         return res
 
 
