@@ -27,7 +27,7 @@ class TestPicoZKEndToEnd(unittest.TestCase):
 
             # Implementation Body
             prf_func = TripleDES_prf(keys, p)
-            # add_noise(sdf, p, hashed_df, prf_func)
+            add_noise(sdf, p, hashed_df, prf_func)
 
             prf_func = Poseidon_prf(keys, p)
             add_noise(sdf, p, hashed_df, prf_func)
