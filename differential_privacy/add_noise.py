@@ -4,7 +4,7 @@ from nistbeacon import NistBeacon
 from datetime import datetime
 
 
-def add_noise(df, col, p, hashed_df, key, zk_lap_table):
+def add_noise(df, col, p, hashed_df, zk_lap_table, prf_func):
     """
     Time1: A prover commits a data and a key and generate a private key
     Time2: A beacon generates a random integer-string, x
@@ -26,33 +26,40 @@ def add_noise(df, col, p, hashed_df, key, zk_lap_table):
 
     def get_beacon():
         beaconVal = NistBeacon.get_last_record()
-        num2_hex = beaconVal.output_value
-        num2 = int(num2_hex, 16) % p  # Convert hexadecimal string to integer
+        beacon_hex = beaconVal.output_value
+        beacon = int(beacon_hex, 16) % p  # Convert hexadecimal string to integer
         now = datetime.now()
-        print(" ", now, ":", num2)
-        return num2
+        print(" ", now, ":", beacon)
+        beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
+        if len(beacon) < 64:
+            beacon = [0 for _ in range(64 - len(beacon))] + beacon
+        else:
+            beacon = beacon[:64]
+        assert len(beacon) == 64
+        return beacon
 
-    # Generate a seed
-    def generate_seed(key):
-        num1 = key.to_binary()
-        num2 = get_beacon()
-        result = num1 ^ num2
-        return result.to_arithmetic()
+    def shrink_bits(bit_list, size):
+        bin_list = bit_list[:size]
 
-    def prf(seed, i):
-        seed_h = poseidon_hash.hash([seed, i])
-        x = seed_h.to_binary()
-        shifted_x = x >> 114
+        reduced_bits = 0
+        for i in range(size - 1, -1, -1):
+            reduced_bits += 2 ** (i) * bin_list[i]
 
-        # create a uniform draw in [0, 1023]
-        U = shifted_x.to_arithmetic()
-        return zk_lap_table[U]
+        return reduced_bits
 
-    seed = generate_seed(key)
+    def prf(beacon):
+        _, enc_lis = prf_func.encrypt(beacon)
+        return shrink_bits(enc_lis, 13)
 
     for i in range(len(sdf)):
+        print(i, end="\r")
         # look up laplace sample in the table
-        lap_draw = prf(seed, i)
+        U = prf(get_beacon())
+
+        # Draw from lap distribution
+        lap_draw = zk_lap_table[U]
+
+        # Add noise to data
         sdf_copy = df.loc[i, col]
         df.loc[i, col] = df.loc[i, col] + lap_draw
         check = df.loc[i, col] - sdf_copy - lap_draw
