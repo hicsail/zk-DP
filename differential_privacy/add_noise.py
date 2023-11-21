@@ -4,6 +4,7 @@ from nistbeacon import NistBeacon
 from datetime import datetime
 from .laplase import gen_laplace_table
 
+
 def add_noise(sdf, p, hashed_df, prf_func):
     """
     Time1: A prover commits a data and a key and generate a private key
@@ -53,8 +54,8 @@ def add_noise(sdf, p, hashed_df, prf_func):
         return shrink_bits(enc_lis, 13)
 
     # Query the data
-    histogram = ZKList([0, 0, 0, 0, 0]) #TODO Parameterize size of hist
-    
+    histogram = ZKList([0, 0, 0, 0, 0])  # TODO Parameterize size of hist
+
     def update_hist(x):
         histogram[x] = histogram[x] + 1000
 
@@ -76,5 +77,5 @@ def add_noise(sdf, p, hashed_df, prf_func):
         check = before + lap_draw - histogram[i]
         assert0(check)
         assert val_of(check) == 0
-    
+
     print(histogram)

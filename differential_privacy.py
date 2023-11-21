@@ -1,7 +1,7 @@
 import pandas as pd
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
-from differential_privacy.execute import execute
+from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
 from differential_privacy.des_module.triple_des import triple_DES
 
@@ -17,8 +17,11 @@ if __name__ == "__main__":
         # Replace negative values and N with ave.(excl. neg values)
         preprocess(df)
 
+        col = "PUMA"
+        sdf = df[col]
         poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+        hashed_df = poseidon_hash.hash(list(sdf))
         _key = poseidon_hash.hash(keys)
 
         # Implementation Body
-        execute(df, p, DES_inst)
+        add_noise(sdf, p, hashed_df, DES_inst)

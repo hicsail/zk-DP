@@ -1,10 +1,11 @@
-from picozk import *
 import pandas as pd
-import matplotlib.pyplot as plt
-from differential_privacy.execute import execute
-from experiment.counter import count
+from picozk import *
+from picozk.poseidon_hash import PoseidonHash
+from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
 from differential_privacy.des_module.triple_des import triple_DES
+import matplotlib.pyplot as plt
+from experiment.counter import count
 
 if __name__ == "__main__":
     p = pow(2, 127) - 1
@@ -23,8 +24,16 @@ if __name__ == "__main__":
         preprocess(df)
 
         for s in sizes:
+            col = "PUMA"
             _df = df.iloc[:s].copy()
-            execute(_df, p, DES_inst)
+            sdf = _df[col]
+            poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+            hashed_df = poseidon_hash.hash(list(sdf))
+            _key = poseidon_hash.hash(keys)
+
+            # Implementation Body
+            add_noise(sdf, p, hashed_df, DES_inst)
+
             line_count = count(s)
             res_list.append([s, line_count])
 
