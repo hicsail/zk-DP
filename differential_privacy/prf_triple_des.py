@@ -17,10 +17,11 @@ class TripleDES_prf:
 
         return reduced_bits
 
-    def run(self, i):
-        _beacon = get_beacon(self.p)
+    def generate_seed(self, i):
+        return get_beacon(self.p) ^ i
 
-        beacon = _beacon + i
+    def run(self, i):
+        beacon = self.generate_seed(i)
         beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
         if len(beacon) < 64:
             beacon = [0 for _ in range(64 - len(beacon))] + beacon

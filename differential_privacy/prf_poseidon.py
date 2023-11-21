@@ -8,19 +8,23 @@ class Poseidon_prf:
         self.keys = ZKList(keys)
         self.poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
 
+    def shrink_bits(self, seed_h, size):
+        x = seed_h.to_binary()
+        shift = len(x.wires) - size
+        shifted_x = x >> shift
+        return shifted_x.to_arithmetic()
 
-    # Generate a seed
     def generate_seed(self):
         seed = []
-        for i, key in enumerate(self.keys):
-            num1 = key.to_binary()
-            num2 = get_beacon(self.p)
-            seed.append((num1 ^ num2).to_arithmetic())
+        beacon = get_beacon(self.p)
+        for key in self.keys:
+            bi_num1 = key.to_binary()
+            seed.append((bi_num1 ^ beacon).to_arithmetic())
         return seed
 
     def run(self, i):
         seed = self.generate_seed()
+        
+        # Encryption        
         seed_h = self.poseidon_hash.hash(seed + [i])
-        x = seed_h.to_binary()
-        shifted_x = x >> 114
-        return shifted_x.to_arithmetic()
+        return self.shrink_bits(seed_h, 13)

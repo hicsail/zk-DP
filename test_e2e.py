@@ -17,8 +17,8 @@ class TestPicoZKEndToEnd(unittest.TestCase):
 
         with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
             #Uncomment either
-            # prf_func = TripleDES_prf(keys, p)
-            prf_func = Poseidon_prf(keys, p)
+            prf_func = TripleDES_prf(keys, p)
+            # prf_func = Poseidon_prf(keys, p)
 
             # Replace negative values and N with ave.(excl. neg values)
             preprocess(df)  # TODO: Make it work only on col and row
