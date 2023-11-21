@@ -18,8 +18,8 @@ class TestPicoZKEndToEnd(unittest.TestCase):
             DES_inst = triple_DES(keys)
 
             # Replace negative values and N with ave.(excl. neg values)
-            preprocess(df)
-
+            preprocess(df) #TODO: Make it work only on col and row
+            
             col = "PUMA"
             _df = df[:10]
             sdf = _df[col]
