@@ -16,7 +16,7 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
         with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
-            #Uncomment either
+            # Uncomment either
             prf_func = TripleDES_prf(keys, p)
             # prf_func = Poseidon_prf(keys, p)
 

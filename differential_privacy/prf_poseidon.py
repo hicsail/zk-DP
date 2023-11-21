@@ -2,6 +2,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from .utils import get_beacon
 
+
 class Poseidon_prf:
     def __init__(self, keys, p):
         self.p = p
@@ -24,7 +25,7 @@ class Poseidon_prf:
 
     def run(self, i):
         seed = self.generate_seed()
-        
-        # Encryption        
+
+        # Encryption
         seed_h = self.poseidon_hash.hash(seed + [i])
         return self.shrink_bits(seed_h, 13)

@@ -11,6 +11,7 @@ def get_beacon(p):
     print(" ", now, ":", beacon)
     return beacon
 
+
 def xor(one, two):
     if len(one) > len(two):
         two = [0 for _ in range(len(one) - len(two))] + two

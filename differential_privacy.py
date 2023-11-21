@@ -14,7 +14,7 @@ if __name__ == "__main__":
     keys = [1987034928369859712, 1987034925329849712, 15528198805165525]  # TODO: Make a proper key
 
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
-        #Uncomment either
+        # Uncomment either
         prf_func = TripleDES_prf(keys, p)
         # prf_func = Poseidon_prf(keys, p)
 
