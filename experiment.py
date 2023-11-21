@@ -3,8 +3,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
-from differential_privacy.prf_triple_des import TripleDES_prf
-from differential_privacy.prf_poseidon import Poseidon_prf
+from differential_privacy.prf import TripleDES_prf, Poseidon_prf
 import matplotlib.pyplot as plt
 from experiment.counter import count
 
