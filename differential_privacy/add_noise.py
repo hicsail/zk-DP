@@ -1,7 +1,5 @@
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
-from nistbeacon import NistBeacon
-from datetime import datetime
 from .laplase import gen_laplace_table
 
 SCALE = 1000
@@ -26,38 +24,6 @@ def add_noise(sdf, p, hashed_df, prf_func):
     digest = poseidon_hash.hash(list(sdf))
     assert0(digest - hashed_df)
 
-    def get_beacon(i):
-        beaconVal = NistBeacon.get_last_record()
-        beacon_hex = beaconVal.output_value
-        beacon = int(beacon_hex, 16) % p  # Convert hexadecimal string to integer
-        now = datetime.now()
-        print(" ", now, ":", beacon)
-        return beacon
-
-    def shrink_bits(bit_list, size):
-        bin_list = bit_list[:size]
-
-        reduced_bits = 0
-        for i in range(size - 1, -1, -1):
-            reduced_bits += 2 ** (i) * bin_list[i]
-
-        return reduced_bits
-
-    def prf():
-        _beacon = get_beacon()
-
-        beacon = _beacon + i
-        beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
-        if len(beacon) < 64:
-            beacon = [0 for _ in range(64 - len(beacon))] + beacon
-        else:
-            beacon = beacon[:64]
-        assert len(beacon) == 64
-
-        # Encryption
-        _, seed_list = prf_func.encrypt(beacon)
-        return shrink_bits(seed_list, 13)
-
     # Query the data
     histogram = ZKList([0, 0, 0, 0, 0])  # TODO Parameterize size of hist
 
@@ -73,7 +39,7 @@ def add_noise(sdf, p, hashed_df, prf_func):
     for i in range(len(histogram)):
         print(i, end="\r")
         # look up laplace sample in the table
-        U = prf(i)
+        U = prf_func.run(i)
 
         # Draw from lap distribution
         lap_draw = zk_lap_table[U] * SCALE

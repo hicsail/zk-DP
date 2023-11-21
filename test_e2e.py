@@ -4,7 +4,8 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
-from differential_privacy.des_module.triple_des import triple_DES
+from differential_privacy.prf_triple_des import TripleDES_prf
+from differential_privacy.prf_poseidon import Poseidon_prf
 
 
 class TestPicoZKEndToEnd(unittest.TestCase):
@@ -15,8 +16,6 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
         with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
-            DES_inst = triple_DES(keys)
-
             # Replace negative values and N with ave.(excl. neg values)
             preprocess(df)  # TODO: Make it work only on col and row
 
@@ -28,7 +27,11 @@ class TestPicoZKEndToEnd(unittest.TestCase):
             _key = poseidon_hash.hash(keys)
 
             # Implementation Body
-            add_noise(sdf, p, hashed_df, DES_inst)
+            prf_func = TripleDES_prf(keys, p)
+            add_noise(sdf, p, hashed_df, prf_func)
+
+            prf_func = Poseidon_prf(keys, p)
+            add_noise(sdf, p, hashed_df, prf_func)
 
 
 if __name__ == "__main__":
