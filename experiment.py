@@ -3,7 +3,8 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
-from differential_privacy.des_module.triple_des import triple_DES
+from differential_privacy.prf_triple_des import TripleDES_prf
+from differential_privacy.prf_poseidon import Poseidon_prf
 import matplotlib.pyplot as plt
 from experiment.counter import count
 
@@ -19,7 +20,6 @@ if __name__ == "__main__":
     res_list = []
 
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):  # TODO: Modify so that we can experiment both posiedon hash and 3DES
-        DES_inst = triple_DES(keys)
         # Replace negative values and N with ave.(excl. neg values)
         preprocess(df)
 
@@ -31,19 +31,33 @@ if __name__ == "__main__":
             hashed_df = poseidon_hash.hash(list(sdf))
             _key = poseidon_hash.hash(keys)
 
-            # Implementation Body
-            add_noise(sdf, p, hashed_df, DES_inst)
-
+            # Triple DES
+            prf_func = TripleDES_prf(keys, p)
+            add_noise(sdf, p, hashed_df, prf_func)
             line_count = count(s)
-            res_list.append([s, line_count])
+            res_list.append([s, line_count, "tdes"])
 
-    res_df = pd.DataFrame(res_list, columns=["Size", "Counter"])
+            # Poseidon Hash
+            prf_func = Poseidon_prf(keys, p)
+            add_noise(sdf, p, hashed_df, prf_func)
+            line_count = count(s)
+            res_list.append([s, line_count, "poseidon"])
+
+    res_df = pd.DataFrame(res_list, columns=["Size", "Counter", "PRF"])
 
     # Plotting
-    plt.figure(figsize=(10, 6))  # You can adjust the size of the figure
-    plt.plot(res_df["Size"], res_df["Counter"], marker="o")  # marker='o' adds a circle marker to each data point
+
+    # Filter and plot for Triple DES
+    tdes_df = res_df[res_df["PRF"] == "tdes"]
+    plt.plot(tdes_df["Size"], tdes_df["Counter"], marker="o", label="Triple DES")
+
+    # Filter and plot for Poseidon
+    poseidon_df = res_df[res_df["PRF"] == "poseidon"]
+    plt.plot(poseidon_df["Size"], poseidon_df["Counter"], marker="o", label="Poseidon")
+
     plt.title("IR Growth")
-    plt.xlabel("Size (s)")
-    plt.ylabel("Line Count (in 10^6)")
+    plt.xlabel("Size (rows)")
+    plt.ylabel("Lines in .rel (in 10^6)")
     plt.grid(True)
+    plt.legend(loc="best")
     plt.show()
