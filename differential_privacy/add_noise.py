@@ -2,9 +2,9 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from nistbeacon import NistBeacon
 from datetime import datetime
+from .laplase import gen_laplace_table
 
-
-def add_noise(df, col, p, hashed_df, zk_lap_table, prf_func):
+def add_noise(sdf, p, hashed_df, prf_func):
     """
     Time1: A prover commits a data and a key and generate a private key
     Time2: A beacon generates a random integer-string, x
@@ -18,18 +18,18 @@ def add_noise(df, col, p, hashed_df, zk_lap_table, prf_func):
             assert0(data[n] + noise - Pub_data[n])
     """
 
-    sdf = df[col]
     # Confirm the authenticity of the data
     poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
     digest = poseidon_hash.hash(list(sdf))
     assert0(digest - hashed_df)
 
-    def get_beacon():
+    def get_beacon(i):
         beaconVal = NistBeacon.get_last_record()
         beacon_hex = beaconVal.output_value
         beacon = int(beacon_hex, 16) % p  # Convert hexadecimal string to integer
         now = datetime.now()
         print(" ", now, ":", beacon)
+        beacon += i
         beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
         if len(beacon) < 64:
             beacon = [0 for _ in range(64 - len(beacon))] + beacon
@@ -47,21 +47,34 @@ def add_noise(df, col, p, hashed_df, zk_lap_table, prf_func):
 
         return reduced_bits
 
-    def prf(beacon):
+    def prf(i):
+        beacon = get_beacon(i)
         _, enc_lis = prf_func.encrypt(beacon)
         return shrink_bits(enc_lis, 13)
 
-    for i in range(len(sdf)):
+    # Query the data
+    histogram = ZKList([0, 0, 0, 0, 0]) #TODO Parameterize size of hist
+    
+    def update_hist(x):
+        histogram[x] = histogram[x] + 1000
+
+    sdf.apply(update_hist)
+    print(histogram)
+
+    laplace_table = gen_laplace_table(sensitivity=1, p=p)
+    zk_lap_table = ZKList(laplace_table)
+
+    for i in range(len(histogram)):
         print(i, end="\r")
         # look up laplace sample in the table
-        U = prf(get_beacon())
+        U = prf(i)
 
         # Draw from lap distribution
         lap_draw = zk_lap_table[U]
-
-        # Add noise to data
-        sdf_copy = df.loc[i, col]
-        df.loc[i, col] = df.loc[i, col] + lap_draw
-        check = df.loc[i, col] - sdf_copy - lap_draw
+        before = histogram[i]
+        histogram[i] = histogram[i] + lap_draw
+        check = before + lap_draw - histogram[i]
         assert0(check)
         assert val_of(check) == 0
+    
+    print(histogram)
