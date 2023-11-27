@@ -2,7 +2,7 @@ import random
 from picozk import *
 
 
-def list_to_binary(_list):
+def bitlist_to_int(_list):
     res = 0
     for p in range(len(_list)):
         res += _list[p] * (2 ** (len(_list) - 1 - p))

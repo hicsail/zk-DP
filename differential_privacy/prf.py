@@ -1,7 +1,7 @@
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from .des_module.triple_des import triple_DES
-from .des_module.utils import list_to_binary, int_to_bitlist, xor
+from .des_module.utils import bitlist_to_int, int_to_bitlist, xor
 from nistbeacon import NistBeacon
 from datetime import datetime
 
@@ -18,7 +18,7 @@ def get_beacon(p):
 class Poseidon_prf:
     def __init__(self, keys, p):
         self.p = p
-        self.keys = ZKList(keys)
+        self.keys = [SecretInt(key) for key in keys]
         self.poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
 
     def shrink_bits(self, seed_h, size):
@@ -31,8 +31,8 @@ class Poseidon_prf:
         seed = []
         beacon = get_beacon(self.p)
         for key in self.keys:
-            bi_num1 = key.to_binary()
-            seed.append((bi_num1 ^ beacon).to_arithmetic())
+            bi_key = key.to_binary()
+            seed.append((bi_key ^ beacon).to_arithmetic())
         return seed
 
     def run(self, i):
@@ -46,13 +46,13 @@ class Poseidon_prf:
 class Poseidon_prf_no_fieldswicth:
     def __init__(self, keys, p):
         self.p = p
-        self.keys = ZKList(keys)
+        self.keys = [SecretInt(key) for key in keys]
         self.poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
 
     def shrink_bits(self, seed_h, size):
         pow = round(math.log(self.p + 1, 2))
         x = int_to_bitlist(seed_h, pow)
-        return list_to_binary(x[0:size])
+        return bitlist_to_int(x[0:size])
 
     def generate_seed(self):
         seed = []
@@ -60,13 +60,13 @@ class Poseidon_prf_no_fieldswicth:
         beacon = [int(x) for x in bin(beacon)[2:]]
         for key in self.keys:
             size = round(math.log(self.p + 1, 2))
-            bi_num = int_to_bitlist(key, size)
-            xored = xor(bi_num, beacon)
-            int_xored = list_to_binary(xored)
+            bi_key = int_to_bitlist(key, size)
+            xored = xor(bi_key, beacon)
+            int_xored = bitlist_to_int(xored)
             seed.append(int_xored)
 
             test = val_of(key)
-            test_obj = val_of(list_to_binary(bi_num))
+            test_obj = val_of(bitlist_to_int(bi_key))
             assert test == test_obj
         return seed
 
