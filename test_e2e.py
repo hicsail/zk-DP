@@ -14,7 +14,7 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         df = pd.read_csv("ma2019.csv")
         keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
-        with PicoZKCompiler("picozk_test", field=[p], options=["ram"]):
+        with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
             # Replace negative values and N with ave.(excl. neg values)
             preprocess(df)  # TODO: Make it work only on col and row
 

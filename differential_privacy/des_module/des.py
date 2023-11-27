@@ -125,7 +125,7 @@ class DES:
         # Final Permutation (Reverse of Initial Permutation)
         enc_list = self.permutate(enc_list, final_perm_table)
 
-        return list_to_binary(enc_list), enc_list
+        return bitlist_to_int(enc_list), enc_list
 
     def decrypt(self, enc_list):
         # Initial Permutation of input
@@ -137,4 +137,4 @@ class DES:
         # Final Permutation
         dec_list = self.permutate(dec_list, final_perm_table)
 
-        return list_to_binary(dec_list), dec_list
+        return bitlist_to_int(dec_list), dec_list
