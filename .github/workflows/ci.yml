@@ -31,5 +31,7 @@ jobs:
           git clone https://github.com/uvm-plaid/picozk.git
           cd picozk
           pip install .
+      - name: Clone and install picozk
+        run: mkdir irs
       - name: Run dp statement
         run: python test_e2e.py
