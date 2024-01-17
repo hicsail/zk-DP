@@ -244,6 +244,7 @@ def AES(plain_text, _key):
     bin_mtx = AddRoundKey(_round_keys, shifted)
 
     cipher_text = [el for elem in bin_mtx for el in elem]
+    assert len(bin_input) == len(cipher_text)
     return cipher_text
 
 
