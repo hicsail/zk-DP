@@ -75,11 +75,9 @@ def ShiftRows(sboxed):
         raise ValueError("sboxed must have exactly 16 elements")
 
     shifted = []
-    for row in range(4):
-        shift = row
-        shifted_row = [sboxed[(i + shift) % 4 + 4 * row] for i in range(4)]
-        shifted.extend(shifted_row)
-
+    for shift in range(4):
+        shifted_row = [sboxed[(i + shift) % 4 + 4 * shift] for i in range(4)]
+        shifted += shifted_row
     return shifted
 
 
@@ -183,7 +181,16 @@ def key_expansion(key):
     return key_schedule
 
 
-# Helper function for the round constant
+'''
+Helper function for the round constant
+0x1B = 0b00011011 in binary, which is an irreducible polynomial of degree 8 for AES
+0x80 = 0b10000000 in binary
+0xFF = 0b11111111 in binary
+Therefore, the following code checks if a's MSB is set or not
+If yes, the shifted a by 1 is XORed with 0x1B 
+    and ANDed with 0xFF to ensure that the result stays in 8 bits
+Else, the shifted a by 1 is returned
+'''
 def xtime(a):
     return (((a << 1) ^ 0x1B) & 0xFF) if (a & 0x80) else (a << 1)
 
@@ -196,8 +203,6 @@ def AddRoundKey(keys, input_secret):
 
 
 def AES(plain_text, _key):
-
-
     # Converting integer/plain text into bits list
     bin_input = int_to_bitlist(plain_text, 128)
     bin_mtx = [bin_input[i : i + 8] for i in range(0, len(bin_input), 8)]
@@ -209,11 +214,16 @@ def AES(plain_text, _key):
     key = int_to_bitlist(_key, 128)
     round_keys = key_expansion(key)
 
-    for i in range(11):
-        
+    # i = 0: Directly apply AddRoundKey(_round_keys, mixed)
+    _round_keys = round_keys[0 : 16]
+    bin_mtx = AddRoundKey(_round_keys, bin_mtx)
+
+    # i = 1 to 10: All operations
+    for i in range(1, 10):
         sboxed = SubBytes(bin_mtx)
         shifted = ShiftRows(sboxed)
 
+        #TODO: Remove this; just a checker
         for row in range(4):
             original_row = sboxed[row * 4 : (row + 1) * 4]
             shifted_row = shifted[row * 4 : (row + 1) * 4]
@@ -223,12 +233,16 @@ def AES(plain_text, _key):
         mixed = mix_columns(shifted)
         # print(f"\nmixed columns {mixed}", len(mixed))
 
-        _round_keys = round_keys[i:i+16]
-        assert len(_round_keys) == 16
+        _round_keys = round_keys[i : i + 16]
+        bin_mtx = AddRoundKey(_round_keys, mixed)
         # print("\n_Round keys:", _round_keys, len(_round_keys))
 
-        bin_mtx = AddRoundKey(_round_keys, mixed)
-    
+    # All operations except MixColumns in 11th iteration
+    sboxed = SubBytes(bin_mtx)
+    shifted = ShiftRows(sboxed)
+    _round_keys = round_keys[i : i + 16]
+    bin_mtx = AddRoundKey(_round_keys, shifted)
+
     cipher_text = [el for elem in bin_mtx for el in elem]
     return cipher_text
 
