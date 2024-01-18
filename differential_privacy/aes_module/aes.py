@@ -167,19 +167,6 @@ def sub_word(word):
         word[i] = int(hex_to_binary(sbox[row][column]), 2)
     return word
 
-"""
-Helper function for the round constant
-0x1B = 0b00011011 in binary, which corresponds to the irreducible polynomial: x^8 + x^4 + x^3 + x + 1
-0x80 = 0b10000000 in binary
-0xFF = 0b11111111 in binary
-Therefore, the following code checks if a's MSB is set or not
-If yes, the shifted a by 1 is XORed with 0x1B 
-    and ANDed with 0xFF to ensure that the result stays in 8 bits
-Else, the shifted a by 1 is returned
-"""
-def xtime(a):
-    return (((a << 1) ^ 0x1B) & 0xFF) if (a & 0x80) else (a << 1)
-
 
 def key_expansion(key):
     # The key size for AES-128 is 128 bits = 16 bytes
@@ -191,23 +178,25 @@ def key_expansion(key):
     # AES-128 has 10 rounds, and we need 11 round keys (one for the initial round and one for each of the 10 rounds)
     # Each round key is 4 words (16 bytes), so we need a total of 44 words
     key_schedule = []
-    rcon = [0x01, 0x00, 0x00, 0x00] #TODO: Idx0 probably incorrect
+    rcon = [0x01, 0x00, 0x00, 0x00]  # TODO: Idx0 probably incorrect
+    Nk = 4  # Number of 32-bit words in CipherKey
+    Nr = 10  # Number of rounds
 
     # The first round key is the key itself
-    for i in range(4):
-        key_schedule += key_bytes[i * 4 : (i + 1) * 4]
+    for i in range(Nk):
+        key_schedule += key_bytes[i * Nk : (i + 1) * Nk]
 
     # Each subsequent round key is derived from the previous ones
-    for i in range(4, 4 * 11):  # 4 words per round key * 11 round keys
-        word = key_schedule[-4:]
-        if i % 4 == 0:
-            rotated = rot_word(word)
-            word = sub_word(rotated)
-            word[0] = word[0] ^ rcon[0]
-            rcon[0] = xtime(rcon[0])
+    for i in range(Nk, Nk * (Nr + 1)):  # 4 words per round key * 11 round keys
+        temp = key_schedule[-Nk:]
+        if i % Nk == 0:
+            rotated = rot_word(temp)
+            temp = sub_word(rotated)
+            temp[i] = temp[i] ^ rcon[i / Nk % Nk]  # TODO FIXME index of temp and rcon
+            rcon[i / Nk % Nk] = gf_mult_by_02(rcon[i / Nk % Nk])
         for j in range(4):
-            word[j] ^= int(key_schedule[-16 + j])
-        key_schedule.extend(word)
+            temp[j] ^= int(key_schedule[-16 + j])
+        key_schedule.extend(temp)
 
     key_schedule = [int_to_bitlist(int(elem), 8) for elem in key_schedule]
     # key_schedule = [key_schedule[i : i + 4] for i in range(0, len(key_schedule), 4)]
