@@ -76,7 +76,7 @@ def gf_mult_by_02(b):
     This function returns b * 2 within GF(2^8)
     0x80 = 10000000 in binary
     0xFF = 11111111 in binary
-    0x1B = 11011 in binary, which corresponds to the polynomial: x^8 + x^4 + x^3 + x + 1
+    0x1B = 11011 in binary, which corresponds to the irreducible polynomial: x^8 + x^4 + x^3 + x + 1
     (Notice:We don't need 1000 prior to 11011 as this polynomial is defined in GF(2^8))
     """
     if b & 0x80:  # Checks if the MSB is 1
@@ -169,7 +169,7 @@ def sub_word(word):
 
 """
 Helper function for the round constant
-0x1B = 0b00011011 in binary, which is an irreducible polynomial of degree 8 for AES
+0x1B = 0b00011011 in binary, which corresponds to the irreducible polynomial: x^8 + x^4 + x^3 + x + 1
 0x80 = 0b10000000 in binary
 0xFF = 0b11111111 in binary
 Therefore, the following code checks if a's MSB is set or not
