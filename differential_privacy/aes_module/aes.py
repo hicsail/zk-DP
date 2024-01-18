@@ -167,6 +167,19 @@ def sub_word(word):
         word[i] = int(hex_to_binary(sbox[row][column]), 2)
     return word
 
+"""
+Helper function for the round constant
+0x1B = 0b00011011 in binary, which is an irreducible polynomial of degree 8 for AES
+0x80 = 0b10000000 in binary
+0xFF = 0b11111111 in binary
+Therefore, the following code checks if a's MSB is set or not
+If yes, the shifted a by 1 is XORed with 0x1B 
+    and ANDed with 0xFF to ensure that the result stays in 8 bits
+Else, the shifted a by 1 is returned
+"""
+def xtime(a):
+    return (((a << 1) ^ 0x1B) & 0xFF) if (a & 0x80) else (a << 1)
+
 
 def key_expansion(key):
     # The key size for AES-128 is 128 bits = 16 bytes
@@ -199,22 +212,6 @@ def key_expansion(key):
     key_schedule = [int_to_bitlist(int(elem), 8) for elem in key_schedule]
     # key_schedule = [key_schedule[i : i + 4] for i in range(0, len(key_schedule), 4)]
     return key_schedule
-
-
-"""
-Helper function for the round constant
-0x1B = 0b00011011 in binary, which is an irreducible polynomial of degree 8 for AES
-0x80 = 0b10000000 in binary
-0xFF = 0b11111111 in binary
-Therefore, the following code checks if a's MSB is set or not
-If yes, the shifted a by 1 is XORed with 0x1B 
-    and ANDed with 0xFF to ensure that the result stays in 8 bits
-Else, the shifted a by 1 is returned
-"""
-
-
-def xtime(a):
-    return (((a << 1) ^ 0x1B) & 0xFF) if (a & 0x80) else (a << 1)
 
 
 def AddRoundKey(keys, input_secret):
