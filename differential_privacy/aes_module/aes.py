@@ -60,16 +60,6 @@ def SubBytes(state):
     return state
 
 
-def sub_word(word):
-    for i, w in enumerate(word):
-        # Extract row and column number from the state's byte
-        row = int(w) // 0x10
-        column = int(w) % 0x10
-        # Substitute the byte with the corresponding value from the sbox
-        word[i] = int(hex_to_binary(sbox[row][column]), 2)
-    return word
-
-
 def ShiftRows(sboxed):
     if len(sboxed) != 16:
         raise ValueError("sboxed state must have exactly 16 elements")
@@ -168,6 +158,16 @@ def rot_word(word):
     return word[1:] + word[:1]
 
 
+def sub_word(word):
+    for i, w in enumerate(word):
+        # Extract row and column number from the state's byte
+        row = int(w) // 0x10
+        column = int(w) % 0x10
+        # Substitute the byte with the corresponding value from the sbox
+        word[i] = int(hex_to_binary(sbox[row][column]), 2)
+    return word
+
+
 def key_expansion(key):
     # The key size for AES-128 is 128 bits = 16 bytes
     assert len(key) == 128
@@ -178,7 +178,7 @@ def key_expansion(key):
     # AES-128 has 10 rounds, and we need 11 round keys (one for the initial round and one for each of the 10 rounds)
     # Each round key is 4 words (16 bytes), so we need a total of 44 words
     key_schedule = []
-    rcon = [0x01, 0x00, 0x00, 0x00]
+    rcon = [0x01, 0x00, 0x00, 0x00] #TODO: Idx0 probably incorrect
 
     # The first round key is the key itself
     for i in range(4):
