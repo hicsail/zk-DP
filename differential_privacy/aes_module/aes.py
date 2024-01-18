@@ -72,7 +72,7 @@ def sub_word(word):
 
 def ShiftRows(sboxed):
     if len(sboxed) != 16:
-        raise ValueError("sboxed must have exactly 16 elements")
+        raise ValueError("sboxed state must have exactly 16 elements")
 
     shifted = []
     for shift in range(4):
@@ -82,23 +82,34 @@ def ShiftRows(sboxed):
 
 
 def gf_mult_by_02(b):
-    # 0x1B corresponds to AES irreducible polynomial x^8 + x^4 + x^3 + x + 1
-    if b & 0x80:
-        return ((b << 1) ^ 0x1B) & 0xFF
+    """
+    This function returns b * 2 within GF(2^8)
+    0x80 = 10000000 in binary
+    0xFF = 11111111 in binary
+    0x1B = 11011 in binary, which corresponds to the polynomial: x^8 + x^4 + x^3 + x + 1
+    (Notice:We don't need 1000 prior to 11011 as this polynomial is defined in GF(2^8))
+    """
+    if b & 0x80:  # Checks if the MSB is 1
+        l_shift = b << 1  # Shift by 1 (* 2)
+        gf_28 = l_shift ^ 0x1B  # Reduce to GF2^8
+        res = gf_28 & 0xFF  # Ensure the res is trimmed to 8 bits
+        return res
     else:
-        return b << 1
+        return b << 1  # Simply mult by 2 if MSB is 0 as no reduction is needed
 
 
 def gf_mult_by_03(b):
+    """
+    This function returns b * 2 + b within GF(2^8) as {03} * b is sum of {02} and {01}
+    """
     return gf_mult_by_02(b) ^ b
 
 
-# Define the MixColumns function
 def mix_columns(shifted):
     mixed = []
 
-    for i in range(0, len(shifted), 4):
-        shifted_row = shifted[i : i + 4]
+    for idx in range(0, len(shifted), 4):
+        shifted_row = shifted[idx : idx + 4]
 
         # Convert each 8 bit list into an integer to work with
         state_column = [int("".join(str(bit) for bit in byte), 2) for byte in shifted_row]
@@ -108,6 +119,15 @@ def mix_columns(shifted):
 
         # MixColumns matrix multiplication
         for i in range(4):
+            """
+            The following operation computes:
+            s'0c = [02 03 01 01] * s0c
+            s'1c = [01 02 03 01] * s1c
+            s'2c = [01 01 02 03] * s2c
+            s'3c = [03 01 01 02] * s3c
+            (Note: Addition is XOR in the context of Galois Field arithmetic)
+            """
+
             mixed_column[i] = (
                 (
                     gf_mult_by_02(state_column[i])
@@ -181,7 +201,7 @@ def key_expansion(key):
     return key_schedule
 
 
-'''
+"""
 Helper function for the round constant
 0x1B = 0b00011011 in binary, which is an irreducible polynomial of degree 8 for AES
 0x80 = 0b10000000 in binary
@@ -190,7 +210,9 @@ Therefore, the following code checks if a's MSB is set or not
 If yes, the shifted a by 1 is XORed with 0x1B 
     and ANDed with 0xFF to ensure that the result stays in 8 bits
 Else, the shifted a by 1 is returned
-'''
+"""
+
+
 def xtime(a):
     return (((a << 1) ^ 0x1B) & 0xFF) if (a & 0x80) else (a << 1)
 
@@ -215,7 +237,7 @@ def AES(plain_text, _key):
     round_keys = key_expansion(key)
 
     # i = 0: Directly apply AddRoundKey(_round_keys, mixed)
-    _round_keys = round_keys[0 : 16]
+    _round_keys = round_keys[0:16]
     bin_mtx = AddRoundKey(_round_keys, bin_mtx)
 
     # i = 1 to 10: All operations
@@ -223,7 +245,7 @@ def AES(plain_text, _key):
         sboxed = SubBytes(bin_mtx)
         shifted = ShiftRows(sboxed)
 
-        #TODO: Remove this; just a checker
+        # TODO: Remove this; just a checker
         for row in range(4):
             original_row = sboxed[row * 4 : (row + 1) * 4]
             shifted_row = shifted[row * 4 : (row + 1) * 4]
@@ -252,3 +274,4 @@ int_str = 1987034928369859712
 _key = 1235282586324778
 encrypted = AES(int_str, _key)
 print("\nencrypted", encrypted)
+# assert encrypted == [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0]
