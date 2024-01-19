@@ -360,6 +360,7 @@ def InvCipher(cipher_text, round_keys):
     assert len(plain_text) == len(cipher_text)
     return plain_text
 
+
 # e2s Test for enc and dec
 int_str = 1987034928369859712
 _key = 1235282586324778
