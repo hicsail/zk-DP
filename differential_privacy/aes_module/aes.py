@@ -24,6 +24,10 @@ sbox = [
 mixcol_mtx = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 
 
+Nk = 4  # Number of 32-bit words in CipherKey
+Nr = 10  # Number of rounds
+Nb = 4  # Block size in word
+
 def binary_to_hex(binary_string):
     try:
         # Convert the binary string to an integer
@@ -179,9 +183,6 @@ def key_expansion(key):
     # Each round key is 4 words (16 bytes), so we need a total of 44 words
     key_schedule = []
     rcon = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]  # TODO: probably incorrect
-    Nk = 4  # Number of 32-bit words in CipherKey
-    Nr = 10  # Number of rounds
-    Nb = 4  # Block size in word
 
     # The first round key is the key itself
     for i in range(Nk):
@@ -227,14 +228,14 @@ def AES(plain_text, _key):
     bin_mtx = AddRoundKey(_round_keys, bin_mtx)
 
     # i = 1 to 10: All operations
-    for i in range(1, 10):
+    for i in range(1, Nr):
         sboxed = SubBytes(bin_mtx)
         shifted = ShiftRows(sboxed)
 
         # TODO: Remove this; just a checker
         for row in range(4):
-            original_row = sboxed[row * 4 : (row + 1) * 4]
-            shifted_row = shifted[row * 4 : (row + 1) * 4]
+            original_row = sboxed[row * Nb : (row + 1) * Nb]
+            shifted_row = shifted[row * Nb : (row + 1) * Nb]
             assert shifted_row == original_row[row:] + original_row[:row]
 
         # Apply the MixColumns function to the example input
@@ -256,10 +257,38 @@ def AES(plain_text, _key):
     return cipher_text, round_keys
 
 
+def InvCipher(cipher_text, round_keys):
+    # Converting integer/plain text into bits list
+    bin_mtx = [cipher_text[i : i + 8] for i in range(0, len(cipher_text), 8)]
+    print("bin_mtx", bin_mtx)
+
+    # Directly apply AddRoundKey(_round_keys, mixed)
+    _round_keys = round_keys[Nr * Nb:(Nr + 1)*Nb -1]
+    bin_mtx = AddRoundKey(_round_keys, bin_mtx)
+
+    # i = 10 to 1: All operations
+    for i in range(Nr - 1, 1, -1):
+        InvShifted = InvShiftRows(bin_mtx)
+        InvSboxed = InvSubBytes(InvShifted)
+        _round_keys = round_keys[i : i + 16] #TODO: FIX idx
+        Signed = AddRoundKey(_round_keys, InvSboxed)
+        bin_mtx = InvMixColumns(Signed)
+
+    # All operations except MixColumns for the 0th block
+    InvShifted = InvShiftRows(bin_mtx)
+    InvSboxed = InvSubBytes(InvShifted)
+    _round_keys = round_keys[i : i + 16] #TODO: FIX idx
+    plain_text = AddRoundKey(_round_keys, InvSboxed)
+
+    cipher_text = [el for elem in plain_text for el in elem]
+    assert len(plain_text) == len(cipher_text)
+    return plain_text
+
+
 int_str = 1987034928369859712
 _key = 1235282586324778
 cipher_text, round_keys = AES(int_str, _key)
 print("\ncipher_text", cipher_text)
-inverted_text = InvCipher(cipher_text, round_keys)
-
+InvPlainText = InvCipher(cipher_text, round_keys)
+print("\nInvPlainText", InvPlainText)
 # assert encrypted == [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0]
