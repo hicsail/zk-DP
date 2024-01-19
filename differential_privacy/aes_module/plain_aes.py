@@ -10,11 +10,8 @@ def SubBytes(state, Inv=False):
     sbox_to_use = InvSbox if Inv else Sbox
     for i in range(len(state)):
         bin_rep = bitlist_to_int(state[i])
-        # Extract row and column number from the state's byte
-        row = bin_rep // 0x10
-        column = bin_rep % 0x10
         # Substitute the byte with the corresponding value from the sbox
-        boxed_val = sbox_to_use[row][column]
+        boxed_val = sbox_to_use[bin_rep]
         state[i] = int_to_bitlist(boxed_val, 8)
     return state
 
@@ -215,8 +212,9 @@ def sub_word(word):
         # Extract row and column number from the state's byte
         row = int(w) // 0x10
         column = int(w) % 0x10
+        idx = row * 16 + column
         # Substitute the byte with the corresponding value from the sbox
-        word[i] = Sbox[row][column]
+        word[i] = Sbox[idx]
     return word
 
 

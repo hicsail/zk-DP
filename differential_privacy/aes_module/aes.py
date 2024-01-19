@@ -1,20 +1,19 @@
 from utils import *
 from tables import Sbox, InvSbox
+from picozk import *
 
 Nk = 4  # Number of 32-bit words in CipherKey
 Nr = 10  # Number of rounds
 Nb = 4  # Block size in word
+p = pow(2, 257) - 1
 
 
 def SubBytes(state, Inv=False):
     sbox_to_use = InvSbox if Inv else Sbox
     for i in range(len(state)):
         bin_rep = bitlist_to_int(state[i])
-        # Extract row and column number from the state's byte
-        row = bin_rep // 0x10
-        column = bin_rep % 0x10
         # Substitute the byte with the corresponding value from the sbox
-        boxed_val = sbox_to_use[row][column]
+        boxed_val = ZKList(sbox_to_use)[bin_rep]
         state[i] = int_to_bitlist(boxed_val, 8)
     return state
 
@@ -215,8 +214,9 @@ def sub_word(word):
         # Extract row and column number from the state's byte
         row = int(w) // 0x10
         column = int(w) % 0x10
+        idx = row * 16 + column
         # Substitute the byte with the corresponding value from the sbox
-        word[i] = Sbox[row][column]
+        word[i] = Sbox[idx]
     return word
 
 
@@ -248,7 +248,7 @@ def key_expansion(key):
         key_schedule.extend(temp)
 
     key_schedule = [int_to_bitlist(int(elem), 8) for elem in key_schedule]
-    return key_schedule
+    return [ZKList(schedule) for schedule in key_schedule]
 
 
 def AddRoundKey(keys, input_secret):
@@ -320,19 +320,6 @@ def InvCipher(cipher_text, round_keys):
     return plain_text
 
 
-# e2s Test for enc and dec
-int_str = 1987034928369859712
-_key = 1235282586324778
-
-cipher_text, round_keys = AES(int_str, _key)
-print("\ncipher_text", cipher_text)
-
-InvPlainText = InvCipher(cipher_text, round_keys)
-print("\nInvPlainText", InvPlainText)
-
-assert InvPlainText == int_to_bitlist(int_str, 128)
-
-
 # Unit Test for shiftrows and and inverse
 temp_state = [i for i in range(0, 16)]
 print("\nbefore", temp_state)
@@ -350,3 +337,16 @@ assert temp_state == InvRes
 test_mx = [[0, 1, 0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 1, 0, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1], [0, 1, 0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 1, 1, 1, 0], [1, 0, 1, 0, 0, 0, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1], [1, 1, 0, 1, 1, 0, 0, 1], [1, 0, 0, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1], [0, 0, 1, 0, 1, 0, 0, 0], [1, 0, 0, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 0, 0, 0, 1, 0, 0]]
 res = InvMixColumns(MixColumns(test_mx))
 assert test_mx == res
+
+with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
+    # e2s Test for enc and dec
+    int_str = 1987034928369859712
+    _key = 1235282586324778
+
+    cipher_text, round_keys = AES(int_str, _key)
+    print("\ncipher_text", cipher_text)
+
+    InvPlainText = InvCipher(cipher_text, round_keys)
+    print("\nInvPlainText", InvPlainText)
+
+    assert InvPlainText == int_to_bitlist(int_str, 128)
