@@ -46,38 +46,15 @@ Nr = 10  # Number of rounds
 Nb = 4  # Block size in word
 
 
-def binary_to_hex(binary_string):
-    try:
-        # Convert the binary string to an integer
-        decimal_value = int(binary_string, 2)
-        # Convert the integer to a hexadecimal string, remove the '0x' prefix
-        hex_value = hex(decimal_value)[2:]
-        return hex_value
-    except ValueError:
-        # Handle the case where the input is not a valid binary string
-        return "Invalid binary input"
-
-
-def hex_to_binary(hex_string):
-    try:
-        # Convert the hexadecimal string to an integer
-        decimal_value = int(hex_string, 16)
-        # Convert the integer to a binary string, remove the '0b' prefix
-        binary_value = bin(decimal_value)[2:]
-        return binary_value
-    except ValueError:
-        # Handle the case where the input is not a valid hexadecimal string
-        return "Invalid hexadecimal input"
-
-
 def SubBytes(state, Inv=False):
+    sbox_to_use = InvSbox if Inv else Sbox
     for i in range(len(state)):
         bin_rep = bitlist_to_int(state[i])
         # Extract row and column number from the state's byte
         row = bin_rep // 0x10
         column = bin_rep % 0x10
         # Substitute the byte with the corresponding value from the sbox
-        boxed_val = int(hex_to_binary(Sbox[row][column]), 2) if Inv else int(hex_to_binary(InvSbox[row][column]), 2)
+        boxed_val = int(sbox_to_use[row][column], 16)
         state[i] = int_to_bitlist(boxed_val, 8)
     return state
 
@@ -103,12 +80,17 @@ def InvShiftRows(state):
         shifted += shifted_row
     return shifted
 
-
+# Unit Test
 temp_state = [i for i in range(0, 16)]
 print("\nbefore", temp_state)
-res = InvShiftRows(temp_state)
+res = ShiftRows(temp_state)
 print("\nafter", res)
-assert res == [0, 1, 2, 3, 7, 4, 5, 6, 10, 11, 8, 9, 13, 14, 15, 12]
+assert res == [0, 1, 2, 3, 5, 6, 7, 4, 10, 11, 8, 9, 15, 12, 13, 14]
+
+print("\nbefore", res)
+InvRes = InvShiftRows(res)
+print("\nafter", InvRes)
+assert temp_state == InvRes
 
 
 def gf_mult_by_02(b):
@@ -290,7 +272,7 @@ def sub_word(word):
         row = int(w) // 0x10
         column = int(w) % 0x10
         # Substitute the byte with the corresponding value from the sbox
-        word[i] = int(hex_to_binary(Sbox[row][column]), 2)
+        word[i] = int(Sbox[row][column], 16)
     return word
 
 
@@ -334,9 +316,10 @@ def AddRoundKey(keys, input_secret):
 
 
 def AES(plain_text, _key):
-    # Converting integer/plain text into bits list
+    # Convert integer/plain text into bits list
     bin_input = int_to_bitlist(plain_text, 128)
     bin_mtx = [bin_input[i : i + 8] for i in range(0, len(bin_input), 8)]
+    print(bin_mtx)
     rev_bin_input = [item for row in bin_mtx for item in row]
     assert bin_input == rev_bin_input
     print("\ninput    ", bin_input)
@@ -353,22 +336,11 @@ def AES(plain_text, _key):
     for i in range(1, Nr):
         sboxed = SubBytes(bin_mtx)
         shifted = ShiftRows(sboxed)
-
-        # TODO: Remove this; just a checker
-        for row in range(4):
-            original_row = sboxed[row * Nb : (row + 1) * Nb]
-            shifted_row = shifted[row * Nb : (row + 1) * Nb]
-            assert shifted_row == original_row[row:] + original_row[:row]
-
-        # Apply the MixColumns function to the example input
         mixed = MixColumns(shifted)
-        # print(f"\nmixed columns {mixed}", len(mixed))
-
         _round_keys = round_keys[i * 16 : i * 16 + 16]
         bin_mtx = AddRoundKey(_round_keys, mixed)
-        # print("\n_Round keys:", _round_keys, len(_round_keys))
 
-    # All operations except MixColumns in 11th iteration
+    # i = 11: All operations except MixColumns
     sboxed = SubBytes(bin_mtx)
     shifted = ShiftRows(sboxed)
     _round_keys = round_keys[160:176]
@@ -380,10 +352,10 @@ def AES(plain_text, _key):
 
 
 def InvCipher(cipher_text, round_keys):
-    # Converting integer/plain text into bits list
+    
     bin_mtx = [cipher_text[i : i + 8] for i in range(0, len(cipher_text), 8)]
 
-    # Directly apply AddRoundKey(_round_keys, mixed)
+    # Directly apply AddRoundKey(_round_keys, mixed) for the first round
     _round_keys = round_keys[160:176]
     bin_mtx = AddRoundKey(_round_keys, bin_mtx)
 
@@ -395,7 +367,7 @@ def InvCipher(cipher_text, round_keys):
         Signed = AddRoundKey(_round_keys, InvSboxed)
         bin_mtx = InvMixColumns(Signed)
 
-    # All operations except MixColumns for the 0th block
+    # All operations except MixColumns for the last block
     InvShifted = InvShiftRows(bin_mtx)
     InvSboxed = SubBytes(InvShifted, Inv=True)
     _round_keys = round_keys[0:16]

@@ -40,3 +40,27 @@ def generate_bit(size):
     bit = random.randint(0, 2**size)
     bit_list = int_to_bitlist(bit, size)
     return bit, bit_list
+
+# Might not need
+def binary_to_hex(binary_string):
+    try:
+        # Convert the binary string to an integer
+        decimal_value = int(binary_string, 2)
+        # Convert the integer to a hexadecimal string, remove the '0x' prefix
+        hex_value = hex(decimal_value)[2:]
+        return hex_value
+    except ValueError:
+        # Handle the case where the input is not a valid binary string
+        return "Invalid binary input"
+
+
+def hex_to_binary(hex_string):
+    try:
+        # Convert the hexadecimal string to an integer
+        decimal_value = int(hex_string, 16)
+        # Convert the integer to a binary string, remove the '0b' prefix
+        binary_value = bin(decimal_value)[2:]
+        return binary_value
+    except ValueError:
+        # Handle the case where the input is not a valid hexadecimal string
+        return "Invalid hexadecimal input"
