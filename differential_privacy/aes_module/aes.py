@@ -41,16 +41,6 @@ InvSbox = [
 ]
 
 
-MixCol_mtx = [[0x02, 0x03, 0x01, 0x01], [0x01, 0x02, 0x03, 0x01], [0x01, 0x01, 0x02, 0x03], [0x03, 0x01, 0x01, 0x02]]
-
-InvMixCol_mtx = [
-    [0x0E, 0x0B, 0x0D, 0x09],
-    [0x09, 0x0E, 0x0B, 0x0D],
-    [0x0D, 0x09, 0x0E, 0x0B],
-    [0x0B, 0x0D, 0x09, 0x0E],
-]
-
-
 Nk = 4  # Number of 32-bit words in CipherKey
 Nr = 10  # Number of rounds
 Nb = 4  # Block size in word
@@ -154,7 +144,7 @@ def gf_mult_by_09(b):
     return temp ^ b
 
 
-def gf_mult_by_0b(b):
+def gf_mult_by_0B(b):
     """
     This function returns b ^ 3 + b ^ 1 + b within GF(2^8)
     {0b} in binary is 00001011 which is {08} (={02} ^ 3} XOR {02} XOR {01}
@@ -164,7 +154,7 @@ def gf_mult_by_0b(b):
     return temp ^ temp2 ^ b
 
 
-def gf_mult_by_0d(b):
+def gf_mult_by_0D(b):
     """
     This function returns b ^ 3 + b ^ 2 + b within GF(2^8)
     {0d} in binary is 00001101 which is {08} (={02} ^ 3) XOR {04} XOR {01}
@@ -174,7 +164,7 @@ def gf_mult_by_0d(b):
     return temp ^ temp2 ^ b
 
 
-def gf_mult_by_0e(b):
+def gf_mult_by_0E(b):
     """
     This function returns b ^ 3 + b ^ 2 + b ^ 1 within GF(2^8)
     {0e} in binary is 00001110 which is {08} (={02} ^ 3) XOR {04} XOR {02}
@@ -198,11 +188,11 @@ def gf_mult_by_constant(constant, byte):
     elif constant == 0x09:
         return gf_mult_by_09(byte)
     elif constant == 0x0B:
-        return gf_mult_by_0b(byte)
+        return gf_mult_by_0B(byte)
     elif constant == 0x0D:
-        return gf_mult_by_0d(byte)
+        return gf_mult_by_0D(byte)
     elif constant == 0x0E:
-        return gf_mult_by_0e(byte)
+        return gf_mult_by_0E(byte)
     else:
         raise ValueError("Invalid constant for multiplication in GF(2^8)")
 
@@ -218,6 +208,8 @@ def MixColumns(state):
 
         # Placeholder for the output of the MixColumns transformation
         mixed_column = [0, 0, 0, 0]
+
+        MixCol_mtx = [[0x02, 0x03, 0x01, 0x01], [0x01, 0x02, 0x03, 0x01], [0x01, 0x01, 0x02, 0x03], [0x03, 0x01, 0x01, 0x02]]
 
         # MixColumns matrix multiplication
         for i in range(4):
@@ -253,6 +245,13 @@ def InvMixColumns(state):
 
         # Placeholder for the output of the MixColumns transformation
         mixed_column = [0, 0, 0, 0]
+
+        InvMixCol_mtx = [
+            [0x0E, 0x0B, 0x0D, 0x09],
+            [0x09, 0x0E, 0x0B, 0x0D],
+            [0x0D, 0x09, 0x0E, 0x0B],
+            [0x0B, 0x0D, 0x09, 0x0E],
+        ]
 
         # MixColumns matrix multiplication
         for i in range(4):
