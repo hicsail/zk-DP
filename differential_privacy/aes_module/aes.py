@@ -80,18 +80,6 @@ def InvShiftRows(state):
         shifted += shifted_row
     return shifted
 
-# Unit Test
-temp_state = [i for i in range(0, 16)]
-print("\nbefore", temp_state)
-res = ShiftRows(temp_state)
-print("\nafter", res)
-assert res == [0, 1, 2, 3, 5, 6, 7, 4, 10, 11, 8, 9, 15, 12, 13, 14]
-
-print("\nbefore", res)
-InvRes = InvShiftRows(res)
-print("\nafter", InvRes)
-assert temp_state == InvRes
-
 
 def gf_mult_by_02(b):
     """
@@ -257,10 +245,6 @@ def InvMixColumns(state):
 
     return mixed_state
 
-test_mx = [[0, 1, 0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 1, 0, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1], [0, 1, 0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 1, 1, 1, 0], [1, 0, 1, 0, 0, 0, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1], [1, 1, 0, 1, 1, 0, 0, 1], [1, 0, 0, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1], [0, 0, 1, 0, 1, 0, 0, 0], [1, 0, 0, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 0, 0, 0, 1, 0, 0]]
-res = InvMixColumns(MixColumns(test_mx))
-assert test_mx == res
-
 
 def rot_word(word):
     return word[1:] + word[:1]
@@ -319,7 +303,6 @@ def AES(plain_text, _key):
     # Convert integer/plain text into bits list
     bin_input = int_to_bitlist(plain_text, 128)
     bin_mtx = [bin_input[i : i + 8] for i in range(0, len(bin_input), 8)]
-    print(bin_mtx)
     rev_bin_input = [item for row in bin_mtx for item in row]
     assert bin_input == rev_bin_input
     print("\ninput    ", bin_input)
@@ -377,7 +360,7 @@ def InvCipher(cipher_text, round_keys):
     assert len(plain_text) == len(cipher_text)
     return plain_text
 
-
+# e2s Test for enc and dec
 int_str = 1987034928369859712
 _key = 1235282586324778
 
@@ -388,3 +371,22 @@ InvPlainText = InvCipher(cipher_text, round_keys)
 print("\nInvPlainText", InvPlainText)
 
 assert InvPlainText == int_to_bitlist(int_str, 128)
+
+
+# Unit Test for shiftrows and and inverse
+temp_state = [i for i in range(0, 16)]
+print("\nbefore", temp_state)
+res = ShiftRows(temp_state)
+print("\nafter", res)
+assert res == [0, 1, 2, 3, 5, 6, 7, 4, 10, 11, 8, 9, 15, 12, 13, 14]
+
+print("\nbefore", res)
+InvRes = InvShiftRows(res)
+print("\nafter", InvRes)
+assert temp_state == InvRes
+
+
+# Unit Test for mixcol and inverse
+test_mx = [[0, 1, 0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 1, 0, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1], [0, 1, 0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 1, 1, 1, 0], [1, 0, 1, 0, 0, 0, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1], [1, 1, 0, 1, 1, 0, 0, 1], [1, 0, 0, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1], [0, 0, 1, 0, 1, 0, 0, 0], [1, 0, 0, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 0, 0, 0, 1, 0, 0]]
+res = InvMixColumns(MixColumns(test_mx))
+assert test_mx == res
