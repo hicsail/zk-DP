@@ -194,8 +194,8 @@ def key_expansion(key):
             rotated = rot_word(temp)
             temp = sub_word(rotated)
             temp[0] = temp[0] ^ rcon[i // Nk - 1]  # TODO FIXME index of temp and rcon
-        for j in range(4):
-            temp[j] ^= int(key_schedule[-Nk * 4 + j])
+
+        temp = [temp[j] ^ int(key_schedule[-Nk * 4 + j]) for j in range(4)]
         key_schedule.extend(temp)
 
     key_schedule = [int_to_bitlist(int(elem), 8) for elem in key_schedule]
@@ -253,11 +253,13 @@ def AES(plain_text, _key):
 
     cipher_text = [el for elem in bin_mtx for el in elem]
     assert len(bin_input) == len(cipher_text)
-    return cipher_text
+    return cipher_text, round_keys
 
 
 int_str = 1987034928369859712
 _key = 1235282586324778
-encrypted = AES(int_str, _key)
-print("\nencrypted", encrypted)
+cipher_text, round_keys = AES(int_str, _key)
+print("\ncipher_text", cipher_text)
+inverted_text = InvCipher(cipher_text, round_keys)
+
 # assert encrypted == [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0]
