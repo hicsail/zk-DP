@@ -275,6 +275,10 @@ def InvMixColumns(state):
 
     return mixed_state
 
+test_mx = [[0, 1, 0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 1, 0, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1], [0, 1, 0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 1, 1, 1, 0], [1, 0, 1, 0, 0, 0, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1], [1, 1, 0, 1, 1, 0, 0, 1], [1, 0, 0, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1], [0, 0, 1, 0, 1, 0, 0, 0], [1, 0, 0, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 0, 0, 0, 1, 0, 0]]
+res = InvMixColumns(MixColumns(test_mx))
+assert test_mx == res
+
 
 def rot_word(word):
     return word[1:] + word[:1]
@@ -384,7 +388,7 @@ def InvCipher(cipher_text, round_keys):
     bin_mtx = AddRoundKey(_round_keys, bin_mtx)
 
     # i = 10 to 1: All operations
-    for i in range(Nr - 1, 1, -1):
+    for i in range(Nr - 1, 0, -1):
         InvShifted = InvShiftRows(bin_mtx)
         InvSboxed = SubBytes(InvShifted, Inv=True)
         _round_keys = round_keys[i * 16 : i * 16 + 16]
@@ -410,3 +414,5 @@ print("\ncipher_text", cipher_text)
 
 InvPlainText = InvCipher(cipher_text, round_keys)
 print("\nInvPlainText", InvPlainText)
+
+assert InvPlainText == int_to_bitlist(int_str, 128)
