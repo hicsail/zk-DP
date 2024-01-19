@@ -1,7 +1,7 @@
 from utils import *
 
 
-sbox = [
+Sbox = [
     ["63", "7c", "77", "7b", "f2", "6b", "6f", "c5", "30", "01", "67", "2b", "fe", "d7", "ab", "76"],
     ["ca", "82", "c9", "7d", "fa", "59", "47", "f0", "ad", "d4", "a2", "af", "9c", "a4", "72", "c0"],
     ["b7", "fd", "93", "26", "36", "3f", "f7", "cc", "34", "a5", "e5", "f1", "71", "d8", "31", "15"],
@@ -21,7 +21,28 @@ sbox = [
 ]
 
 
+InvSbox = [
+    ["52", "09", "6a", "d5", "30", "36", "a5", "38", "bf", "40", "a3", "9e", "81", "f3", "d7", "fb"],
+    ["7c", "e3", "39", "82", "9b", "2f", "ff", "87", "34", "8e", "43", "44", "c4", "de", "e9", "cb"],
+    ["54", "7b", "94", "32", "a6", "c2", "23", "3d", "ee", "4c", "95", "0b", "42", "fa", "c3", "4e"],
+    ["08", "2e", "a1", "66", "28", "d9", "24", "b2", "76", "5b", "a2", "49", "6d", "8b", "d1", "25"],
+    ["72", "f8", "f6", "64", "86", "68", "98", "16", "d4", "a4", "5c", "cc", "5d", "65", "b6", "92"],
+    ["6c", "70", "48", "50", "fd", "ed", "b9", "da", "5e", "15", "46", "57", "a7", "8d", "9d", "84"],
+    ["90", "d8", "ab", "00", "8c", "bc", "d3", "0a", "f7", "e4", "58", "05", "b8", "b3", "45", "06"],
+    ["d0", "2c", "1e", "8f", "ca", "3f", "0f", "02", "c1", "af", "bd", "03", "01", "13", "8a", "6b"],
+    ["3a", "91", "11", "41", "4f", "67", "dc", "ea", "97", "f2", "cf", "ce", "f0", "b4", "e6", "73"],
+    ["96", "ac", "74", "22", "e7", "ad", "35", "85", "e2", "f9", "37", "e8", "1c", "75", "df", "6e"],
+    ["47", "f1", "1a", "71", "1d", "29", "c5", "89", "6f", "b7", "62", "0e", "aa", "18", "be", "1b"],
+    ["fc", "56", "3e", "4b", "c6", "d2", "79", "20", "9a", "db", "c0", "fe", "78", "cd", "5a", "f4"],
+    ["1f", "dd", "a8", "33", "88", "07", "c7", "31", "b1", "12", "10", "59", "27", "80", "ec", "5f"],
+    ["60", "51", "7f", "a9", "19", "b5", "4a", "0d", "2d", "e5", "7a", "9f", "93", "c9", "9c", "ef"],
+    ["a0", "e0", "3b", "4d", "ae", "2a", "f5", "b0", "c8", "eb", "bb", "3c", "83", "53", "99", "61"],
+    ["17", "2b", "04", "7e", "ba", "77", "d6", "26", "e1", "69", "14", "63", "55", "21", "0c", "7d"]
+]
+
+
 mixcol_mtx = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
+InvMixcol_mtx = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
 
 
 Nk = 4  # Number of 32-bit words in CipherKey
@@ -53,27 +74,45 @@ def hex_to_binary(hex_string):
         return "Invalid hexadecimal input"
 
 
-def SubBytes(state):
+def SubBytes(state, Inv=False):
     for i in range(len(state)):
         bin_rep = bitlist_to_int(state[i])
         # Extract row and column number from the state's byte
         row = bin_rep // 0x10
         column = bin_rep % 0x10
         # Substitute the byte with the corresponding value from the sbox
-        boxed_val = int(hex_to_binary(sbox[row][column]), 2)
+        boxed_val = int(hex_to_binary(Sbox[row][column]), 2) if Inv else int(hex_to_binary(InvSbox[row][column]), 2)
         state[i] = int_to_bitlist(boxed_val, 8)
     return state
 
 
-def ShiftRows(sboxed):
-    if len(sboxed) != 16:
-        raise ValueError("sboxed state must have exactly 16 elements")
+def ShiftRows(state):
+    if len(state) != 16:
+        raise ValueError("State must have exactly 16 elements")
 
     shifted = []
     for shift in range(4):
-        shifted_row = [sboxed[(i + shift) % 4 + 4 * shift] for i in range(4)]
+        shifted_row = [state[(i + shift) % 4 + 4 * shift] for i in range(4)]
         shifted += shifted_row
     return shifted
+
+
+def InvShiftRows(state):
+    if len(state) != 16:
+        raise ValueError("State must have exactly 16 elements")
+
+    shifted = []
+    for shift in range(4, 0, -1):
+        shifted_row = [state[(i + shift) % 4 + 4 * (4 - shift)] for i in range(4)]
+        shifted += shifted_row
+    return shifted
+
+
+temp_state = [i for i in range(0, 16)]
+print("\nbefore", temp_state)
+res = InvShiftRows(temp_state)
+print("\nafter", res)
+assert res == [0, 1, 2, 3, 7, 4, 5, 6, 10, 11, 8, 9, 13, 14, 15, 12]
 
 
 def gf_mult_by_02(b):
@@ -95,19 +134,60 @@ def gf_mult_by_02(b):
 
 def gf_mult_by_03(b):
     """
-    This function returns b * 2 + b within GF(2^8) as {03} * b is sum of {02} and {01}
+    This function returns b * 2 + b within GF(2^8) {03} * b is sum of {02} and {01}
     """
     return gf_mult_by_02(b) ^ b
 
 
-def mix_columns(shifted):
-    mixed = []
+def gf_mult_by_09(b):
+    """
+    This function returns b ^ 3 + b within GF(2^8) 
+    {09} in binary is 00001001 which is {08} (={02} ^ 3} XOR {01}
+    """
+    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b))) # {08} * b
+    return temp ^ b
 
-    for idx in range(0, len(shifted), 4):
-        shifted_row = shifted[idx : idx + 4]
+
+def gf_mult_by_0b(b):
+    """
+    This function returns b ^ 3 + b ^ 1 + b within GF(2^8)
+    {0b} in binary is 00001011 which is {08} (={02} ^ 3} XOR {02} XOR {01}
+    """
+    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b))) # {08} * b
+    temp2 = gf_mult_by_02(b) # {02} * b
+    return temp ^ temp2 ^ b
+
+
+def gf_mult_by_0d(b):
+    """
+    This function returns b ^ 3 + b ^ 2 + b within GF(2^8)
+    {0d} in binary is 00001101 which is {08} (={02} ^ 3) XOR {04} XOR {01}
+    """
+    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b))) # {08} * b
+    temp2 = gf_mult_by_02(gf_mult_by_02(b)) # {04} * b
+    return temp ^ temp2 ^ b
+
+
+def gf_mult_by_0e(b):
+    """
+    This function returns b ^ 3 + b ^ 2 + b ^ 1 within GF(2^8)
+    {0e} in binary is 00001110 which is {08} (={02} ^ 3) XOR {04} XOR {02}
+    """
+    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b)))  # {08} * b
+    temp2 = gf_mult_by_02(gf_mult_by_02(b))  # {04} * b
+    temp3 = gf_mult_by_02(b)  # {02} * b
+    return temp ^ temp2 ^ temp3
+
+
+
+def MixColumns(state):
+    mixed_state = []
+
+    for idx in range(0, len(state), 4):
+        row = state[idx : idx + 4]
 
         # Convert each 8 bit list into an integer to work with
-        state_column = [int("".join(str(bit) for bit in byte), 2) for byte in shifted_row]
+        state_column = [int("".join(str(bit) for bit in byte), 2) for byte in row]
 
         # Prepare a list to hold the output of the MixColumns operation
         mixed_column = [0, 0, 0, 0]
@@ -154,10 +234,68 @@ def mix_columns(shifted):
                 )
             )
         # Convert the mixed column back into lists of 8 bits
-        mixed += [int_to_bitlist(byte, 8) for byte in mixed_column]
+        mixed_state += [int_to_bitlist(byte, 8) for byte in mixed_column]
 
-    return mixed
+    return mixed_state
 
+
+def InvMixColumns(state):
+    mixed_state = []
+
+    for idx in range(0, len(state), 4):
+        row = state[idx : idx + 4]
+
+        # Convert each 8 bit list into an integer to work with
+        state_column = [int("".join(str(bit) for bit in byte), 2) for byte in row]
+
+        # Prepare a list to hold the output of the MixColumns operation
+        mixed_column = [0, 0, 0, 0]
+
+        # MixColumns matrix multiplication
+        for i in range(4):
+            """
+            The following operation computes:
+            s'0c = [03 0b 0d 09] * s0c
+            s'1c = [09 0e 0b 0d] * s1c
+            s'2c = [0d 09 0e 0b] * s2c
+            s'3c = [0b 0d 09 0e] * s3c
+            (Note: Addition is XOR in the context of Galois Field arithmetic)
+            """
+
+            mixed_column[i] = (
+                (
+                    gf_mult_by_02(state_column[i])
+                    if mixcol_mtx[i][0] == 2
+                    else gf_mult_by_03(state_column[i])
+                    if mixcol_mtx[i][0] == 3
+                    else state_column[i]
+                )
+                ^ (
+                    gf_mult_by_02(state_column[(i + 1) % 4])
+                    if mixcol_mtx[i][1] == 2
+                    else gf_mult_by_03(state_column[(i + 1) % 4])
+                    if mixcol_mtx[i][1] == 3
+                    else state_column[(i + 1) % 4]
+                )
+                ^ (
+                    gf_mult_by_02(state_column[(i + 2) % 4])
+                    if mixcol_mtx[i][2] == 2
+                    else gf_mult_by_03(state_column[(i + 2) % 4])
+                    if mixcol_mtx[i][2] == 3
+                    else state_column[(i + 2) % 4]
+                )
+                ^ (
+                    gf_mult_by_02(state_column[(i + 3) % 4])
+                    if mixcol_mtx[i][3] == 2
+                    else gf_mult_by_03(state_column[(i + 3) % 4])
+                    if mixcol_mtx[i][3] == 3
+                    else state_column[(i + 3) % 4]
+                )
+            )
+        # Convert the mixed column back into lists of 8 bits
+        mixed_state += [int_to_bitlist(byte, 8) for byte in mixed_column]
+
+    return mixed_state
 
 def rot_word(word):
     return word[1:] + word[:1]
@@ -169,7 +307,7 @@ def sub_word(word):
         row = int(w) // 0x10
         column = int(w) % 0x10
         # Substitute the byte with the corresponding value from the sbox
-        word[i] = int(hex_to_binary(sbox[row][column]), 2)
+        word[i] = int(hex_to_binary(Sbox[row][column]), 2)
     return word
 
 
@@ -240,7 +378,7 @@ def AES(plain_text, _key):
             assert shifted_row == original_row[row:] + original_row[:row]
 
         # Apply the MixColumns function to the example input
-        mixed = mix_columns(shifted)
+        mixed = MixColumns(shifted)
         # print(f"\nmixed columns {mixed}", len(mixed))
 
         _round_keys = round_keys[i * 16 : i * 16 + 16]
@@ -250,7 +388,7 @@ def AES(plain_text, _key):
     # All operations except MixColumns in 11th iteration
     sboxed = SubBytes(bin_mtx)
     shifted = ShiftRows(sboxed)
-    _round_keys = round_keys[160 : 176]
+    _round_keys = round_keys[160:176]
     bin_mtx = AddRoundKey(_round_keys, shifted)
 
     cipher_text = [el for elem in bin_mtx for el in elem]
@@ -261,27 +399,26 @@ def AES(plain_text, _key):
 def InvCipher(cipher_text, round_keys):
     # Converting integer/plain text into bits list
     bin_mtx = [cipher_text[i : i + 8] for i in range(0, len(cipher_text), 8)]
-    print("bin_mtx", bin_mtx)
 
     # Directly apply AddRoundKey(_round_keys, mixed)
-    _round_keys = round_keys[160 : 176]
+    _round_keys = round_keys[160:176]
     bin_mtx = AddRoundKey(_round_keys, bin_mtx)
 
     # i = 10 to 1: All operations
     for i in range(Nr - 1, 1, -1):
         InvShifted = InvShiftRows(bin_mtx)
-        InvSboxed = InvSubBytes(InvShifted)
+        InvSboxed = SubBytes(InvShifted, Inv=True)
         _round_keys = round_keys[i * 16 : i * 16 + 16]
         Signed = AddRoundKey(_round_keys, InvSboxed)
         bin_mtx = InvMixColumns(Signed)
 
     # All operations except MixColumns for the 0th block
     InvShifted = InvShiftRows(bin_mtx)
-    InvSboxed = InvSubBytes(InvShifted)
-    _round_keys = round_keys[0 : 16]
+    InvSboxed = SubBytes(InvShifted, Inv=True)
+    _round_keys = round_keys[0:16]
     plain_text = AddRoundKey(_round_keys, InvSboxed)
 
-    cipher_text = [el for elem in plain_text for el in elem]
+    plain_text = [el for elem in plain_text for el in elem]
     assert len(plain_text) == len(cipher_text)
     return plain_text
 
@@ -294,4 +431,3 @@ print("\ncipher_text", cipher_text)
 
 InvPlainText = InvCipher(cipher_text, round_keys)
 print("\nInvPlainText", InvPlainText)
-# assert cipher_text == [1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0]
