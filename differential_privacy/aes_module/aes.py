@@ -178,24 +178,24 @@ def key_expansion(key):
     # AES-128 has 10 rounds, and we need 11 round keys (one for the initial round and one for each of the 10 rounds)
     # Each round key is 4 words (16 bytes), so we need a total of 44 words
     key_schedule = []
-    rcon = [0x01, 0x00, 0x00, 0x00]  # TODO: Idx0 probably incorrect
+    rcon = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]  # TODO: probably incorrect
     Nk = 4  # Number of 32-bit words in CipherKey
     Nr = 10  # Number of rounds
+    Nb = 4  # Block size in word
 
     # The first round key is the key itself
     for i in range(Nk):
         key_schedule += key_bytes[i * Nk : (i + 1) * Nk]
 
     # Each subsequent round key is derived from the previous ones
-    for i in range(Nk, Nk * (Nr + 1)):  # 4 words per round key * 11 round keys
+    for i in range(Nk, Nb * (Nr + 1)):  # 4 words per round key * 11 round keys
         temp = key_schedule[-Nk:]
         if i % Nk == 0:
             rotated = rot_word(temp)
             temp = sub_word(rotated)
-            temp[i] = temp[i] ^ rcon[i / Nk % Nk]  # TODO FIXME index of temp and rcon
-            rcon[i / Nk % Nk] = gf_mult_by_02(rcon[i / Nk % Nk])
+            temp[0] = temp[0] ^ rcon[i // Nk - 1]  # TODO FIXME index of temp and rcon
         for j in range(4):
-            temp[j] ^= int(key_schedule[-16 + j])
+            temp[j] ^= int(key_schedule[-Nk * 4 + j])
         key_schedule.extend(temp)
 
     key_schedule = [int_to_bitlist(int(elem), 8) for elem in key_schedule]
