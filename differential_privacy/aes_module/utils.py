@@ -41,6 +41,7 @@ def generate_bit(size):
     bit_list = int_to_bitlist(bit, size)
     return bit, bit_list
 
+
 # Might not need
 def binary_to_hex(binary_string):
     try:
