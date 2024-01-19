@@ -37,12 +37,18 @@ InvSbox = [
     ["1f", "dd", "a8", "33", "88", "07", "c7", "31", "b1", "12", "10", "59", "27", "80", "ec", "5f"],
     ["60", "51", "7f", "a9", "19", "b5", "4a", "0d", "2d", "e5", "7a", "9f", "93", "c9", "9c", "ef"],
     ["a0", "e0", "3b", "4d", "ae", "2a", "f5", "b0", "c8", "eb", "bb", "3c", "83", "53", "99", "61"],
-    ["17", "2b", "04", "7e", "ba", "77", "d6", "26", "e1", "69", "14", "63", "55", "21", "0c", "7d"]
+    ["17", "2b", "04", "7e", "ba", "77", "d6", "26", "e1", "69", "14", "63", "55", "21", "0c", "7d"],
 ]
 
 
-mixcol_mtx = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
-InvMixcol_mtx = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
+MixCol_mtx = [[0x02, 0x03, 0x01, 0x01], [0x01, 0x02, 0x03, 0x01], [0x01, 0x01, 0x02, 0x03], [0x03, 0x01, 0x01, 0x02]]
+
+InvMixCol_mtx = [
+    [0x0E, 0x0B, 0x0D, 0x09],
+    [0x09, 0x0E, 0x0B, 0x0D],
+    [0x0D, 0x09, 0x0E, 0x0B],
+    [0x0B, 0x0D, 0x09, 0x0E],
+]
 
 
 Nk = 4  # Number of 32-bit words in CipherKey
@@ -141,10 +147,10 @@ def gf_mult_by_03(b):
 
 def gf_mult_by_09(b):
     """
-    This function returns b ^ 3 + b within GF(2^8) 
+    This function returns b ^ 3 + b within GF(2^8)
     {09} in binary is 00001001 which is {08} (={02} ^ 3} XOR {01}
     """
-    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b))) # {08} * b
+    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b)))  # {08} * b
     return temp ^ b
 
 
@@ -153,8 +159,8 @@ def gf_mult_by_0b(b):
     This function returns b ^ 3 + b ^ 1 + b within GF(2^8)
     {0b} in binary is 00001011 which is {08} (={02} ^ 3} XOR {02} XOR {01}
     """
-    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b))) # {08} * b
-    temp2 = gf_mult_by_02(b) # {02} * b
+    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b)))  # {08} * b
+    temp2 = gf_mult_by_02(b)  # {02} * b
     return temp ^ temp2 ^ b
 
 
@@ -163,8 +169,8 @@ def gf_mult_by_0d(b):
     This function returns b ^ 3 + b ^ 2 + b within GF(2^8)
     {0d} in binary is 00001101 which is {08} (={02} ^ 3) XOR {04} XOR {01}
     """
-    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b))) # {08} * b
-    temp2 = gf_mult_by_02(gf_mult_by_02(b)) # {04} * b
+    temp = gf_mult_by_02(gf_mult_by_02(gf_mult_by_02(b)))  # {08} * b
+    temp2 = gf_mult_by_02(gf_mult_by_02(b))  # {04} * b
     return temp ^ temp2 ^ b
 
 
@@ -179,6 +185,27 @@ def gf_mult_by_0e(b):
     return temp ^ temp2 ^ temp3
 
 
+def gf_mult_by_constant(constant, byte):
+    """
+    Multiplies a byte by a constant in GF(2^8).
+    """
+    if constant == 0x01:
+        return byte
+    elif constant == 0x02:
+        return gf_mult_by_02(byte)
+    elif constant == 0x03:
+        return gf_mult_by_03(byte)
+    elif constant == 0x09:
+        return gf_mult_by_09(byte)
+    elif constant == 0x0B:
+        return gf_mult_by_0b(byte)
+    elif constant == 0x0D:
+        return gf_mult_by_0d(byte)
+    elif constant == 0x0E:
+        return gf_mult_by_0e(byte)
+    else:
+        raise ValueError("Invalid constant for multiplication in GF(2^8)")
+
 
 def MixColumns(state):
     mixed_state = []
@@ -189,7 +216,7 @@ def MixColumns(state):
         # Convert each 8 bit list into an integer to work with
         state_column = [int("".join(str(bit) for bit in byte), 2) for byte in row]
 
-        # Prepare a list to hold the output of the MixColumns operation
+        # Placeholder for the output of the MixColumns transformation
         mixed_column = [0, 0, 0, 0]
 
         # MixColumns matrix multiplication
@@ -204,34 +231,10 @@ def MixColumns(state):
             """
 
             mixed_column[i] = (
-                (
-                    gf_mult_by_02(state_column[i])
-                    if mixcol_mtx[i][0] == 2
-                    else gf_mult_by_03(state_column[i])
-                    if mixcol_mtx[i][0] == 3
-                    else state_column[i]
-                )
-                ^ (
-                    gf_mult_by_02(state_column[(i + 1) % 4])
-                    if mixcol_mtx[i][1] == 2
-                    else gf_mult_by_03(state_column[(i + 1) % 4])
-                    if mixcol_mtx[i][1] == 3
-                    else state_column[(i + 1) % 4]
-                )
-                ^ (
-                    gf_mult_by_02(state_column[(i + 2) % 4])
-                    if mixcol_mtx[i][2] == 2
-                    else gf_mult_by_03(state_column[(i + 2) % 4])
-                    if mixcol_mtx[i][2] == 3
-                    else state_column[(i + 2) % 4]
-                )
-                ^ (
-                    gf_mult_by_02(state_column[(i + 3) % 4])
-                    if mixcol_mtx[i][3] == 2
-                    else gf_mult_by_03(state_column[(i + 3) % 4])
-                    if mixcol_mtx[i][3] == 3
-                    else state_column[(i + 3) % 4]
-                )
+                gf_mult_by_constant(MixCol_mtx[i][0], state_column[0])
+                ^ gf_mult_by_constant(MixCol_mtx[i][1], state_column[1])
+                ^ gf_mult_by_constant(MixCol_mtx[i][2], state_column[2])
+                ^ gf_mult_by_constant(MixCol_mtx[i][3], state_column[3])
             )
         # Convert the mixed column back into lists of 8 bits
         mixed_state += [int_to_bitlist(byte, 8) for byte in mixed_column]
@@ -248,14 +251,14 @@ def InvMixColumns(state):
         # Convert each 8 bit list into an integer to work with
         state_column = [int("".join(str(bit) for bit in byte), 2) for byte in row]
 
-        # Prepare a list to hold the output of the MixColumns operation
+        # Placeholder for the output of the MixColumns transformation
         mixed_column = [0, 0, 0, 0]
 
         # MixColumns matrix multiplication
         for i in range(4):
             """
             The following operation computes:
-            s'0c = [03 0b 0d 09] * s0c
+            s'0c = [0e 0b 0d 09] * s0c
             s'1c = [09 0e 0b 0d] * s1c
             s'2c = [0d 09 0e 0b] * s2c
             s'3c = [0b 0d 09 0e] * s3c
@@ -263,39 +266,16 @@ def InvMixColumns(state):
             """
 
             mixed_column[i] = (
-                (
-                    gf_mult_by_02(state_column[i])
-                    if mixcol_mtx[i][0] == 2
-                    else gf_mult_by_03(state_column[i])
-                    if mixcol_mtx[i][0] == 3
-                    else state_column[i]
-                )
-                ^ (
-                    gf_mult_by_02(state_column[(i + 1) % 4])
-                    if mixcol_mtx[i][1] == 2
-                    else gf_mult_by_03(state_column[(i + 1) % 4])
-                    if mixcol_mtx[i][1] == 3
-                    else state_column[(i + 1) % 4]
-                )
-                ^ (
-                    gf_mult_by_02(state_column[(i + 2) % 4])
-                    if mixcol_mtx[i][2] == 2
-                    else gf_mult_by_03(state_column[(i + 2) % 4])
-                    if mixcol_mtx[i][2] == 3
-                    else state_column[(i + 2) % 4]
-                )
-                ^ (
-                    gf_mult_by_02(state_column[(i + 3) % 4])
-                    if mixcol_mtx[i][3] == 2
-                    else gf_mult_by_03(state_column[(i + 3) % 4])
-                    if mixcol_mtx[i][3] == 3
-                    else state_column[(i + 3) % 4]
-                )
+                gf_mult_by_constant(InvMixCol_mtx[i][0], state_column[0])
+                ^ gf_mult_by_constant(InvMixCol_mtx[i][1], state_column[1])
+                ^ gf_mult_by_constant(InvMixCol_mtx[i][2], state_column[2])
+                ^ gf_mult_by_constant(InvMixCol_mtx[i][3], state_column[3])
             )
         # Convert the mixed column back into lists of 8 bits
         mixed_state += [int_to_bitlist(byte, 8) for byte in mixed_column]
 
     return mixed_state
+
 
 def rot_word(word):
     return word[1:] + word[:1]
