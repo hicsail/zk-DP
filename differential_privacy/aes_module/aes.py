@@ -1,5 +1,5 @@
 from utils import *
-from tables import Sbox, InvSbox
+from tables import Sbox, InvSbox, Enc_mtx, Inv_mtx
 from picozk import *
 
 Nk = 4  # Number of 32-bit words in CipherKey
@@ -52,10 +52,8 @@ def gf_mult_by_02(b):
     Else: Simply mult by 2 if MSB is 0 as no reduction is needed
 
     """
-    check = ((b & 0x80) == 1)
-    first = (((b << 1) ^ 0x1B) & 0xFF).to_arithmetic()
-    second = (b << 1).to_arithmetic()
-    return mux(check, first, second).to_binary()
+    print(val_of((b & 0x80).to_arithmetic()))
+    return mux((b & 0x80) == 1, ((b << 1) ^ 0x1B) & 0xFF, b << 1)
 
 
 def gf_mult_by_03(b):
@@ -128,7 +126,7 @@ def gf_mult_by_constant(constant, byte):
         raise ValueError("Invalid constant for multiplication in GF(2^8)")
 
 
-def MixColumns(state):
+def MixColumns(state, Inv = False):
     mixed_state = []
 
     for idx in range(0, len(state), 4):
@@ -140,16 +138,24 @@ def MixColumns(state):
         # Placeholder for the output of the MixColumns transformation
         mixed_column = [0, 0, 0, 0]
 
-        MixCol_mtx = [[0x02, 0x03, 0x01, 0x01], [0x01, 0x02, 0x03, 0x01], [0x01, 0x01, 0x02, 0x03], [0x03, 0x01, 0x01, 0x02]]
+        MixCol_mtx = Inv_mtx if Inv else Enc_mtx
 
         # MixColumns matrix multiplication
         for i in range(4):
             """
+            The encryption computes:
+                s'0c = [02 03 01 01] * s0c
+                s'1c = [01 02 03 01] * s1c
+                s'2c = [01 01 02 03] * s2c
+                s'3c = [03 01 01 02] * s3c
+
+            Decryption computes:
             The following operation computes:
-            s'0c = [02 03 01 01] * s0c
-            s'1c = [01 02 03 01] * s1c
-            s'2c = [01 01 02 03] * s2c
-            s'3c = [03 01 01 02] * s3c
+                s'0c = [0e 0b 0d 09] * s0c
+                s'1c = [09 0e 0b 0d] * s1c
+                s'2c = [0d 09 0e 0b] * s2c
+                s'3c = [0b 0d 09 0e] * s3c
+
             (Note: Addition is XOR in the context of Galois Field arithmetic)
             """
 
@@ -158,48 +164,6 @@ def MixColumns(state):
                 ^ gf_mult_by_constant(MixCol_mtx[i][1], state_column[1])
                 ^ gf_mult_by_constant(MixCol_mtx[i][2], state_column[2])
                 ^ gf_mult_by_constant(MixCol_mtx[i][3], state_column[3])
-            ).to_arithmetic()
-        # Convert the mixed column back into lists of 8 bits
-        mixed_state += [int_to_bitlist(byte, 8) for byte in mixed_column]
-
-    return mixed_state
-
-
-def InvMixColumns(state):
-    mixed_state = []
-
-    for idx in range(0, len(state), 4):
-        row = state[idx : idx + 4]
-
-        # Convert each 8 bit list into an integer to work with
-        state_column = [bitlist_to_int(byte) for byte in row]
-
-        # Placeholder for the output of the MixColumns transformation
-        mixed_column = [0, 0, 0, 0]
-
-        InvMixCol_mtx = [
-            [0x0E, 0x0B, 0x0D, 0x09],
-            [0x09, 0x0E, 0x0B, 0x0D],
-            [0x0D, 0x09, 0x0E, 0x0B],
-            [0x0B, 0x0D, 0x09, 0x0E],
-        ]
-
-        # MixColumns matrix multiplication
-        for i in range(4):
-            """
-            The following operation computes:
-            s'0c = [0e 0b 0d 09] * s0c
-            s'1c = [09 0e 0b 0d] * s1c
-            s'2c = [0d 09 0e 0b] * s2c
-            s'3c = [0b 0d 09 0e] * s3c
-            (Note: Addition is XOR in the context of Galois Field arithmetic)
-            """
-
-            mixed_column[i] = (
-                gf_mult_by_constant(InvMixCol_mtx[i][0], state_column[0])
-                ^ gf_mult_by_constant(InvMixCol_mtx[i][1], state_column[1])
-                ^ gf_mult_by_constant(InvMixCol_mtx[i][2], state_column[2])
-                ^ gf_mult_by_constant(InvMixCol_mtx[i][3], state_column[3])
             ).to_arithmetic()
         # Convert the mixed column back into lists of 8 bits
         mixed_state += [int_to_bitlist(byte, 8) for byte in mixed_column]
@@ -279,8 +243,14 @@ def AES(plain_text, _key):
     # i = 1 to 10: All operations
     for i in range(1, Nr):
         sboxed = SubBytes(bin_mtx)
-        shifted = ShiftRows(sboxed)
+        shifted = ShiftRows(sboxed)                    
         mixed = MixColumns(shifted)
+        if i == 1:
+            obj = [[0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [1, 0, 0, 1, 1, 1, 1, 1], [1, 0, 1, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 1, 1, 1, 0, 1], [0, 0, 1, 0, 1, 0, 0, 1], [0, 1, 0, 1, 1, 0, 1, 0], [0, 1, 1, 0, 1, 1, 1, 0], [0, 1, 0, 1, 1, 1, 1, 1]]
+            for i, mix in enumerate(mixed):
+                for j, s in enumerate(mix):
+                    print(i, "-", j, val_of(s), obj[i][j])
+                    assert val_of(s) == obj[i][j]
         _round_keys = round_keys[i * 16 : i * 16 + 16]
         bin_mtx = AddRoundKey(_round_keys, mixed)
 
@@ -309,7 +279,7 @@ def InvCipher(cipher_text, round_keys):
         InvSboxed = SubBytes(InvShifted, Inv=True)
         _round_keys = round_keys[i * 16 : i * 16 + 16]
         Signed = AddRoundKey(_round_keys, InvSboxed)
-        bin_mtx = InvMixColumns(Signed)
+        bin_mtx = MixColumns(Signed, Inv=True)
 
     # All operations except MixColumns for the last block
     InvShifted = InvShiftRows(bin_mtx)
@@ -337,7 +307,7 @@ assert temp_state == InvRes
 
 # Unit Test for mixcol and inverse
 # test_mx = [[0, 1, 0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 1, 0, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1], [0, 1, 0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 1, 1, 1, 0], [1, 0, 1, 0, 0, 0, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1], [1, 1, 0, 1, 1, 0, 0, 1], [1, 0, 0, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1], [0, 0, 1, 0, 1, 0, 0, 0], [1, 0, 0, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 0, 0, 0, 1, 0, 0]]
-# res = InvMixColumns(MixColumns(test_mx))
+# res = InvMixColumns(MixColumns(test_mx), Inv=True)
 # assert test_mx == res
 
 with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
