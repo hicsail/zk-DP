@@ -196,7 +196,7 @@ def key_expansion(key):
     # AES-128 has 10 rounds, and we need 11 round keys (one for the initial round and one for each of the 10 rounds)
     # Each round key is 4 words (16 bytes), so we need a total of 44 words
     key_schedule = []
-    rcon = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]  # TODO: probably incorrect
+    rcon = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]
 
     # The first round key is the key itself
     for i in range(Nk):
@@ -208,7 +208,7 @@ def key_expansion(key):
         if i % Nk == 0:
             rotated = rot_word(temp)
             temp = sub_word(rotated)
-            temp[0] = temp[0] ^ rcon[i // Nk - 1]  # TODO FIXME index of temp and rcon
+            temp[0] = temp[0] ^ rcon[i // Nk - 1]
 
         temp = [temp[j] ^ int(key_schedule[-Nk * 4 + j]) for j in range(4)]
         key_schedule.extend(temp)
@@ -245,7 +245,7 @@ def AES(plain_text, _key):
         sboxed = SubBytes(bin_mtx)
         shifted = ShiftRows(sboxed)                    
         mixed = MixColumns(shifted)
-        if i == 1:
+        if i == 1: #TODO: Check on this
             obj = [[0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [1, 0, 0, 1, 1, 1, 1, 1], [1, 0, 1, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 1, 1, 1, 0, 1], [0, 0, 1, 0, 1, 0, 0, 1], [0, 1, 0, 1, 1, 0, 1, 0], [0, 1, 1, 0, 1, 1, 1, 0], [0, 1, 0, 1, 1, 1, 1, 1]]
             for i, mix in enumerate(mixed):
                 for j, s in enumerate(mix):
