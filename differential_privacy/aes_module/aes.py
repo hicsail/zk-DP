@@ -1,5 +1,5 @@
-from utils import *
-from tables import Sbox, InvSbox, Enc_mtx, Inv_mtx
+from .utils import *
+from .tables import Sbox, InvSbox, Enc_mtx, Inv_mtx
 from picozk import *
 
 Nk = 4  # Number of 32-bit words in CipherKey
@@ -225,92 +225,65 @@ def AddRoundKey(keys, input_secret):
     return cipher_text
 
 
-def AES(plain_text, _key):
-    # Convert integer/plain text into bits list
-    bin_input = int_to_bitlist(plain_text, 128)
-    bin_mtx = [bin_input[i : i + 8] for i in range(0, len(bin_input), 8)]
-    rev_bin_input = [item for row in bin_mtx for item in row]
-    assert bin_input == rev_bin_input
-    print("\ninput    ", bin_input)
+class AES:
+    def __init__(self, _key):
+        # Key Expansion: Generating 11 sets of 16 bytes keys(4 bytes x 4)
+        key = int_to_bitlist(_key, 128)
+        self.round_keys = key_expansion(key)
 
-    # Key Expansion: Generating 11 sets of 16 bytes keys(4 bytes x 4)
-    key = int_to_bitlist(_key, 128)
-    round_keys = key_expansion(key)
+    def encrypt(self, plain_text):
+        # Convert integer/plain text into bits list
+        bin_input = int_to_bitlist(plain_text, 128)
+        bin_mtx = [bin_input[i : i + 8] for i in range(0, len(bin_input), 8)]
+        rev_bin_input = [item for row in bin_mtx for item in row]
+        assert bin_input == rev_bin_input
+        print("\ninput    ", bin_input)
 
-    # i = 0: Directly apply AddRoundKey(_round_keys, mixed)
-    _round_keys = round_keys[0:16]
-    bin_mtx = AddRoundKey(_round_keys, bin_mtx)
+        # i = 0: Directly apply AddRoundKey(_round_keys, mixed)
+        _round_keys = self.round_keys[0:16]
+        bin_mtx = AddRoundKey(_round_keys, bin_mtx)
 
-    # i = 1 to 10: All operations
-    for i in range(1, Nr):
+        # i = 1 to 10: All operations
+        for i in range(1, Nr):
+            sboxed = SubBytes(bin_mtx)
+            shifted = ShiftRows(sboxed)                    
+            mixed = MixColumns(shifted)
+            _round_keys = self.round_keys[i * 16 : i * 16 + 16]
+            bin_mtx = AddRoundKey(_round_keys, mixed)
+
+        # i = 11: All operations except MixColumns
         sboxed = SubBytes(bin_mtx)
-        shifted = ShiftRows(sboxed)                    
-        mixed = MixColumns(shifted)
-        _round_keys = round_keys[i * 16 : i * 16 + 16]
-        bin_mtx = AddRoundKey(_round_keys, mixed)
+        shifted = ShiftRows(sboxed)
+        _round_keys = self.round_keys[160:176]
+        bin_mtx = AddRoundKey(_round_keys, shifted)
 
-    # i = 11: All operations except MixColumns
-    sboxed = SubBytes(bin_mtx)
-    shifted = ShiftRows(sboxed)
-    _round_keys = round_keys[160:176]
-    bin_mtx = AddRoundKey(_round_keys, shifted)
-
-    cipher_text = [el for elem in bin_mtx for el in elem]
-    assert len(bin_input) == len(cipher_text)
-    return cipher_text, round_keys
+        cipher_text = [el for elem in bin_mtx for el in elem]
+        assert len(bin_input) == len(cipher_text)
+        return bitlist_to_int(cipher_text), cipher_text
 
 
-def InvCipher(cipher_text, round_keys):
-    
-    bin_mtx = [cipher_text[i : i + 8] for i in range(0, len(cipher_text), 8)]
+    def decrypt(self, cipher_text):
+        
+        bin_mtx = [cipher_text[i : i + 8] for i in range(0, len(cipher_text), 8)]
 
-    # Directly apply AddRoundKey(_round_keys, mixed) for the first round
-    _round_keys = round_keys[160:176]
-    bin_mtx = AddRoundKey(_round_keys, bin_mtx)
+        # Directly apply AddRoundKey(_round_keys, mixed) for the first round
+        _round_keys = self.round_keys[160:176]
+        bin_mtx = AddRoundKey(_round_keys, bin_mtx)
 
-    # i = 10 to 1: All operations
-    for i in range(Nr - 1, 0, -1):
+        # i = 10 to 1: All operations
+        for i in range(Nr - 1, 0, -1):
+            InvShifted = InvShiftRows(bin_mtx)
+            InvSboxed = SubBytes(InvShifted, Inv=True)
+            _round_keys = self.round_keys[i * 16 : i * 16 + 16]
+            Signed = AddRoundKey(_round_keys, InvSboxed)
+            bin_mtx = MixColumns(Signed, Inv=True)
+
+        # All operations except MixColumns for the last block
         InvShifted = InvShiftRows(bin_mtx)
         InvSboxed = SubBytes(InvShifted, Inv=True)
-        _round_keys = round_keys[i * 16 : i * 16 + 16]
-        Signed = AddRoundKey(_round_keys, InvSboxed)
-        bin_mtx = MixColumns(Signed, Inv=True)
+        _round_keys = self.round_keys[0:16]
+        plain_text = AddRoundKey(_round_keys, InvSboxed)
 
-    # All operations except MixColumns for the last block
-    InvShifted = InvShiftRows(bin_mtx)
-    InvSboxed = SubBytes(InvShifted, Inv=True)
-    _round_keys = round_keys[0:16]
-    plain_text = AddRoundKey(_round_keys, InvSboxed)
-
-    plain_text = [el for elem in plain_text for el in elem]
-    assert len(plain_text) == len(cipher_text)
-    return plain_text
-
-
-# Unit Test for shiftrows and and inverse
-temp_state = [i for i in range(0, 16)]
-print("\nbefore", temp_state)
-res = ShiftRows(temp_state)
-print("\nafter", res)
-assert res == [0, 1, 2, 3, 5, 6, 7, 4, 10, 11, 8, 9, 15, 12, 13, 14]
-
-print("\nbefore", res)
-InvRes = InvShiftRows(res)
-print("\nafter", InvRes)
-assert temp_state == InvRes
-
-
-with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
-    # e2s Test for enc and dec
-    int_str = 1987034928369859712
-    _key = 1235282586324778
-
-    cipher_text, round_keys = AES(int_str, _key)
-    _cipher_text = [val_of(ct) for ct in cipher_text]
-    print("\ncipher_text", _cipher_text)
-
-    InvPlainText = InvCipher(cipher_text, round_keys)
-    _InvPlainText = [val_of(pt) for pt in InvPlainText]
-    print("\nInvPlainText", _InvPlainText)
-
-    assert _InvPlainText == int_to_bitlist(int_str, 128)
+        plain_text = [el for elem in plain_text for el in elem]
+        assert len(plain_text) == len(cipher_text)
+        return bitlist_to_int(plain_text), plain_text

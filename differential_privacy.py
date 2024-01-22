@@ -3,7 +3,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
-from differential_privacy.prf import TripleDES_prf, Poseidon_prf
+from differential_privacy.prf import TripleDES_prf, Poseidon_prf, AES_prf
 
 if __name__ == "__main__":
     p = pow(2, 127) - 1
@@ -11,11 +11,12 @@ if __name__ == "__main__":
     df = pd.read_csv("ma2019.csv")
 
     keys = [1987034928369859712, 1987034925329849712, 15528198805165525]  # TODO: Make a proper key
-
+    
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
         # Uncomment either
-        prf_func = TripleDES_prf(keys, p)
+        # prf_func = TripleDES_prf(keys, p)
         # prf_func = Poseidon_prf(keys, p)
+        prf_func = AES_prf(keys, p)
 
         # Replace negative values and N with ave.(excl. neg values)
         preprocess(df)
