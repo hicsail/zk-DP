@@ -52,8 +52,8 @@ def gf_mult_by_02(b):
     Else: Simply mult by 2 if MSB is 0 as no reduction is needed
 
     """
-    if_True =  (((b << 1) ^ 0x1B) & 0xFF).to_arithmetic()
-    if_False =  (b << 1).to_arithmetic()
+    if_True = (((b << 1) ^ 0x1B) & 0xFF).to_arithmetic()
+    if_False = (b << 1).to_arithmetic()
     return mux(((b & 0x80) == 128).to_bool(), if_True, if_False).to_binary()
 
 
@@ -127,7 +127,7 @@ def gf_mult_by_constant(constant, byte):
         raise ValueError("Invalid constant for multiplication in GF(2^8)")
 
 
-def MixColumns(state, Inv = False):
+def MixColumns(state, Inv=False):
     mixed_state = []
 
     for idx in range(0, len(state), 4):
@@ -246,7 +246,7 @@ class AES:
         # i = 1 to 10: All operations
         for i in range(1, Nr):
             sboxed = SubBytes(bin_mtx)
-            shifted = ShiftRows(sboxed)                    
+            shifted = ShiftRows(sboxed)
             mixed = MixColumns(shifted)
             _round_keys = self.round_keys[i * 16 : i * 16 + 16]
             bin_mtx = AddRoundKey(_round_keys, mixed)
@@ -261,9 +261,7 @@ class AES:
         assert len(bin_input) == len(cipher_text)
         return bitlist_to_int(cipher_text), cipher_text
 
-
     def decrypt(self, cipher_text):
-        
         bin_mtx = [cipher_text[i : i + 8] for i in range(0, len(cipher_text), 8)]
 
         # Directly apply AddRoundKey(_round_keys, mixed) for the first round

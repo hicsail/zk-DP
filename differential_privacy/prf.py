@@ -113,7 +113,7 @@ class TripleDES_prf:
 class AES_prf:
     def __init__(self, keys, p):
         self.p = p
-        key = keys[0]^keys[1]^keys[2]
+        key = keys[0] ^ keys[1] ^ keys[2]
         self.prf_func = AES(key)
 
     def shrink_bits(self, bit_list, size):
