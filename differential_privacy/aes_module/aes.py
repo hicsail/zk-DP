@@ -52,8 +52,9 @@ def gf_mult_by_02(b):
     Else: Simply mult by 2 if MSB is 0 as no reduction is needed
 
     """
-    print(val_of((b & 0x80).to_arithmetic()))
-    return mux((b & 0x80) == 1, ((b << 1) ^ 0x1B) & 0xFF, b << 1)
+    if_True =  (((b << 1) ^ 0x1B) & 0xFF).to_arithmetic()
+    if_False =  (b << 1).to_arithmetic()
+    return mux(((b & 0x80) == 128).to_bool(), if_True, if_False).to_binary()
 
 
 def gf_mult_by_03(b):
@@ -245,12 +246,6 @@ def AES(plain_text, _key):
         sboxed = SubBytes(bin_mtx)
         shifted = ShiftRows(sboxed)                    
         mixed = MixColumns(shifted)
-        if i == 1: #TODO: Check on this
-            obj = [[0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [0, 1, 1, 0, 0, 0, 1, 1], [1, 0, 0, 1, 1, 1, 1, 1], [1, 0, 1, 0, 0, 0, 1, 1], [1, 1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 1, 1, 1, 0, 1], [0, 0, 1, 0, 1, 0, 0, 1], [0, 1, 0, 1, 1, 0, 1, 0], [0, 1, 1, 0, 1, 1, 1, 0], [0, 1, 0, 1, 1, 1, 1, 1]]
-            for i, mix in enumerate(mixed):
-                for j, s in enumerate(mix):
-                    print(i, "-", j, val_of(s), obj[i][j])
-                    assert val_of(s) == obj[i][j]
         _round_keys = round_keys[i * 16 : i * 16 + 16]
         bin_mtx = AddRoundKey(_round_keys, mixed)
 
