@@ -300,11 +300,6 @@ print("\nafter", InvRes)
 assert temp_state == InvRes
 
 
-# Unit Test for mixcol and inverse
-# test_mx = [[0, 1, 0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 1, 0, 1, 0], [0, 1, 1, 0, 0, 0, 0, 1], [0, 1, 0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 1, 1, 1, 0], [1, 0, 1, 0, 0, 0, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1], [1, 1, 0, 1, 1, 0, 0, 1], [1, 0, 0, 0, 1, 0, 1, 0], [0, 1, 1, 1, 1, 1, 1, 1], [0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1], [0, 0, 1, 0, 1, 0, 0, 0], [1, 0, 0, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 1, 1, 0], [1, 1, 0, 0, 0, 1, 0, 0]]
-# res = InvMixColumns(MixColumns(test_mx), Inv=True)
-# assert test_mx == res
-
 with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
     # e2s Test for enc and dec
     int_str = 1987034928369859712
