@@ -237,7 +237,6 @@ class AES:
         bin_mtx = [bin_input[i : i + 8] for i in range(0, len(bin_input), 8)]
         rev_bin_input = [item for row in bin_mtx for item in row]
         assert bin_input == rev_bin_input
-        print("\ninput    ", bin_input)
 
         # i = 0: Directly apply AddRoundKey(_round_keys, mixed)
         _round_keys = self.round_keys[0:16]
