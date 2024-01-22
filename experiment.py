@@ -1,9 +1,10 @@
+import time
 import pandas as pd
 from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
-from differential_privacy.prf import TripleDES_prf, Poseidon_prf, Poseidon_prf_no_fieldswicth
+from differential_privacy.prf import TripleDES_prf, Poseidon_prf, Poseidon_prf_no_fieldswicth, AES_prf
 import matplotlib.pyplot as plt
 from experiment.counter import count
 
@@ -31,26 +32,40 @@ if __name__ == "__main__":
             _key = poseidon_hash.hash(keys)
 
             # Triple DES
+            start = time.time()
             prf_func = TripleDES_prf(keys, p)
             add_noise(sdf, p, hashed_df, prf_func)
+            end = time.time()
             line_count = count(s)
-            res_list.append([s, line_count, "tdes"])
+            res_list.append([s, line_count, end - start, "tdes"])
 
             # Poseidon Hash
+            start = time.time()
             prf_func = Poseidon_prf(keys, p)
             add_noise(sdf, p, hashed_df, prf_func)
+            end = time.time()
             line_count = count(s)
-            res_list.append([s, line_count, "poseidon"])
+            res_list.append([s, line_count, end - start, "poseidon"])
 
             # Poseidon Hash No field Switch
+            start = time.time()
             prf_func = Poseidon_prf_no_fieldswicth(keys, p)
             add_noise(sdf, p, hashed_df, prf_func)
+            end = time.time()
             line_count = count(s)
-            res_list.append([s, line_count, "pos_no_fieldswicth"])
+            res_list.append([s, line_count, end - start, "pos_no_fieldswicth"])
 
-    res_df = pd.DataFrame(res_list, columns=["Size", "Counter", "PRF"])
+            # AES
+            start = time.time()
+            prf_func = AES_prf(keys, p)
+            add_noise(sdf, p, hashed_df, prf_func)
+            end = time.time()
+            line_count = count(s)
+            res_list.append([s, line_count, end - start, "aes"])
 
-    # Plotting
+    res_df = pd.DataFrame(res_list, columns=["Size", "Counter", "Time", "PRF"])
+
+    ## Measuring IR Growth
 
     # Filter and plot for Triple DES
     tdes_df = res_df[res_df["PRF"] == "tdes"]
@@ -60,9 +75,13 @@ if __name__ == "__main__":
     poseidon_df = res_df[res_df["PRF"] == "poseidon"]
     plt.plot(poseidon_df["Size"], poseidon_df["Counter"], marker="o", label="Poseidon")
 
-    # Filter and plot for Poseidon
+    # Filter and plot for Poseidon w/o field swicth
     poseidon_df = res_df[res_df["PRF"] == "pos_no_fieldswicth"]
-    plt.plot(poseidon_df["Size"], poseidon_df["Counter"], marker="o", label="poseidon(no field swicth)")
+    plt.plot(poseidon_df["Size"], poseidon_df["Counter"], marker="o", label="Poseidon(no field swicth)")
+
+    # Filter and plot for AES
+    poseidon_df = res_df[res_df["PRF"] == "aes"]
+    plt.plot(poseidon_df["Size"], poseidon_df["Counter"], marker="o", label="AES")
 
     plt.title("IR Growth")
     plt.xlabel("Size (rows)")
@@ -70,3 +89,31 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.legend(loc="best")
     plt.show()
+
+    ## Measuring Time
+
+    # Filter and plot for Triple DES
+    tdes_df = res_df[res_df["PRF"] == "tdes"]
+    plt.plot(tdes_df["Size"], tdes_df["Time"], marker="o", label="Triple DES")
+
+    # Filter and plot for Poseidon
+    poseidon_df = res_df[res_df["PRF"] == "poseidon"]
+    plt.plot(poseidon_df["Size"], poseidon_df["Time"], marker="o", label="Poseidon")
+
+    # Filter and plot for Poseidon
+    poseidon_df = res_df[res_df["PRF"] == "pos_no_fieldswicth"]
+    plt.plot(poseidon_df["Size"], poseidon_df["Time"], marker="o", label="poseidon(no field swicth)")
+
+    # Filter and plot for AES
+    poseidon_df = res_df[res_df["PRF"] == "aes"]
+    plt.plot(poseidon_df["Size"], poseidon_df["Time"], marker="o", label="AES")
+
+    plt.title("RunTime")
+    plt.xlabel("Size (rows)")
+    plt.ylabel("Time")
+    plt.grid(True)
+    plt.legend(loc="best")
+    plt.show()
+
+    csv_file = "DP_analysis.csv"
+    res_df.to_csv(csv_file, index=False)

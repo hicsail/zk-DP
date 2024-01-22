@@ -2,6 +2,7 @@ from picozk import *
 from picozk.poseidon_hash import PoseidonHash
 from .des_module.triple_des import triple_DES
 from .des_module.utils import bitlist_to_int, int_to_bitlist, xor
+from .aes_module.aes import AES
 from nistbeacon import NistBeacon
 from datetime import datetime
 
@@ -103,6 +104,32 @@ class TripleDES_prf:
         else:
             beacon = beacon[:64]
         assert len(beacon) == 64
+
+        # Encryption
+        _, seed_list = self.prf_func.encrypt(beacon)
+        return self.shrink_bits(seed_list, 13)
+
+
+class AES_prf:
+    def __init__(self, keys, p):
+        self.p = p
+        key = keys[0] ^ keys[1] ^ keys[2]
+        self.prf_func = AES(key)
+
+    def shrink_bits(self, bit_list, size):
+        bin_list = bit_list[:size]
+
+        reduced_bits = 0
+        for i in range(size - 1, -1, -1):
+            reduced_bits += 2 ** (i) * bin_list[i]
+
+        return reduced_bits
+
+    def generate_seed(self, i):
+        return get_beacon(self.p) ^ i
+
+    def run(self, i):
+        beacon = self.generate_seed(i)
 
         # Encryption
         _, seed_list = self.prf_func.encrypt(beacon)
