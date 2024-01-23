@@ -81,8 +81,17 @@ class Poseidon_prf_no_fieldswicth:
 
 class TripleDES_prf:
     def __init__(self, keys, p):
+        if type(keys) != list:
+            raise ValueError("Keys for TripleDES must be list")
         self.p = p
-        self.prf_func = triple_DES(keys)
+        poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+        _keys = []
+        beacon = get_beacon(p) # Public Randomness
+        for key in keys:
+            _key = poseidon_hash.hash([key]) # Secret Randomness
+            _key^= beacon
+            _keys.append(_key)
+        self.prf_func = triple_DES(_keys)
 
     def shrink_bits(self, bit_list, size):
         bin_list = bit_list[:size]
@@ -93,28 +102,30 @@ class TripleDES_prf:
 
         return reduced_bits
 
-    def generate_seed(self, i):
-        return get_beacon(self.p) ^ i
-
     def run(self, i):
-        beacon = self.generate_seed(i)
-        beacon = [int(x) for x in bin(beacon)[2:]]  # To binary list
-        if len(beacon) < 64:
-            beacon = [0 for _ in range(64 - len(beacon))] + beacon
+        
+        i = [int(x) for x in bin(i)[2:]]  # To binary list
+        if len(i) < 64:
+            i = [0 for _ in range(64 - len(i))] + i
         else:
-            beacon = beacon[:64]
-        assert len(beacon) == 64
+            i = i[:64]
+        assert len(i) == 64
 
         # Encryption
-        _, seed_list = self.prf_func.encrypt(beacon)
+        _, seed_list = self.prf_func.encrypt(i)
         return self.shrink_bits(seed_list, 13)
 
 
 class AES_prf:
-    def __init__(self, keys, p):
+    def __init__(self, key, p):
+        if len(key) != 1:
+            raise ValueError("Key for AES must be length of 1")
+        beacon = get_beacon(p) # Public Randomness
         self.p = p
-        key = keys[0] ^ keys[1] ^ keys[2]
-        self.prf_func = AES(key)
+        poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3) 
+        _key = poseidon_hash.hash(key) # Secret Randomness
+        _key^= beacon
+        self.prf_func = AES(_key)
 
     def shrink_bits(self, bit_list, size):
         bin_list = bit_list[:size]
@@ -125,12 +136,6 @@ class AES_prf:
 
         return reduced_bits
 
-    def generate_seed(self, i):
-        return get_beacon(self.p) ^ i
-
     def run(self, i):
-        beacon = self.generate_seed(i)
-
-        # Encryption
-        _, seed_list = self.prf_func.encrypt(beacon)
+        _, seed_list = self.prf_func.encrypt(i)
         return self.shrink_bits(seed_list, 13)

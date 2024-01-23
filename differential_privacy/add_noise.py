@@ -31,7 +31,7 @@ def add_noise(sdf, p, hashed_df, prf_func):
         histogram[x] = histogram[x] + SCALE
 
     sdf.apply(update_hist)
-    print(histogram)
+    print("Before noise", histogram)
 
     laplace_table = gen_laplace_table(sensitivity=1, p=p)
     zk_lap_table = ZKList(laplace_table)
@@ -49,4 +49,4 @@ def add_noise(sdf, p, hashed_df, prf_func):
         assert0(check)
         assert val_of(check) == 0
 
-    print(histogram)
+    print("After noise", histogram)
