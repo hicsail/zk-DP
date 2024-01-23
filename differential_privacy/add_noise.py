@@ -33,16 +33,19 @@ def add_noise(sdf, p, hashed_df, prf_func):
     sdf.apply(update_hist)
     print("Before noise", histogram)
 
-    laplace_table = gen_laplace_table(sensitivity=1, p=p)
+    laplace_table = gen_laplace_table(sensitivity=10, p=p)
     zk_lap_table = ZKList(laplace_table)
 
     for i in range(len(histogram)):
         print(i, end="\r")
         # look up laplace sample in the table
-        U = prf_func.run(i)
+        x = prf_func.run(i)
+        x = x.to_binary()
+        shifted_x = x >> 114
+        U = shifted_x.to_arithmetic()
 
         # Draw from lap distribution
-        lap_draw = zk_lap_table[U] * SCALE
+        lap_draw = zk_lap_table[U]
         before = histogram[i]
         histogram[i] = histogram[i] + lap_draw
         check = before + lap_draw - histogram[i]
