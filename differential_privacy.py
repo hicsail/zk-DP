@@ -10,14 +10,13 @@ if __name__ == "__main__":
     # https://media.githubusercontent.com/media/usnistgov/SDNist/main/nist%20diverse%20communities%20data%20excerpts/massachusetts/ma2019.csv
     df = pd.read_csv("ma2019.csv")
 
-    # key = [1987034928369859712]
+    key = [1987034928369859712]
     keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
-        
         # prf_func = AES_prf(key, p)
-        prf_func = TripleDES_prf(keys, p)
-        # prf_func = Poseidon_prf(keys, p)
+        # prf_func = TripleDES_prf(keys, p)
+        prf_func = Poseidon_prf(keys, p)
 
         # Replace negative values and N with ave.(excl. neg values)
         preprocess(df)
@@ -26,7 +25,6 @@ if __name__ == "__main__":
         sdf = df[col]
         poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
         hashed_df = poseidon_hash.hash(list(sdf))
-        
 
         # Implementation Body
         add_noise(sdf, p, hashed_df, prf_func)
