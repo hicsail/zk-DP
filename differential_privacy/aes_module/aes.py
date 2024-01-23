@@ -5,7 +5,6 @@ from picozk import *
 Nk = 4  # Number of 32-bit words in CipherKey
 Nr = 10  # Number of rounds
 Nb = 4  # Block size in word
-p = pow(2, 257) - 1
 
 
 def SubBytes(state, Inv=False):
