@@ -25,12 +25,13 @@ class Poseidon_prf:
         self.poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
         self._key = self.poseidon_hash.hash(keys)
         self._key ^= beacon
+        self.p = p
 
     def shrink_bits(self, prn, size):
         return bitlist_to_int(int_to_bitlist(prn, size))
 
     def run(self, i):
-        prn = self.poseidon_hash.hash([i ^ self._key])  # TODO: ??
+        prn = SecretInt(self.poseidon_hash.hash([i ^ self._key]) % self.p)
         return self.shrink_bits(prn, 13)
 
 
