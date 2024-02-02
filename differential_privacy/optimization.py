@@ -84,18 +84,11 @@ CA = [14446, 16138, 15434, 9055, 8586]
 IL = [1057, 16122, 3315, 262, 15654]
 AK = [14540, 713, 15048, 10795, 8319]
 
+US_Hist = [MA[i] + NY[i] + CA[i] + IL[i] + AK[i] for i in range(len(MA))]
+noised_H = [42997, 48355, 45541, 45180, 44754] # TODO: Un-hard-code
 
-Hist = [MA[i] + NY[i] + CA[i] + IL[i] + AK[i] for i in range(len(MA))]
-
-_MA = [4060, 3122, 9823, 15404, 9304]
-_NY = [8984, 13252, 2108, 9651, 2893]
-_CA = [14451, 15143, 15437, 9058, 8581]
-_IL = [959, 16123, 3120, 267, 15655]
-_AK = [14543, 715, 15053, 10800, 8321]
-noised_H = [_MA[i] + _NY[i] + _CA[i] + _IL[i] + _AK[i] for i in range(len(_MA))]
-
-init_sum = sum(Hist)
-init_loss = l2_obj_func(Hist, noised_H)
+init_sum = sum(US_Hist)
+init_loss = l2_obj_func(US_Hist, noised_H)
 
 
 # L2
@@ -103,9 +96,9 @@ l2_rate = 0.001
 l2_iter = 1000
 
 # Results
-H_star = L2_optimization(Hist, noised_H, l2_rate, l2_iter, init_sum)
+H_star = L2_optimization(US_Hist, noised_H, l2_rate, l2_iter, init_sum)
 post_l2_Sum = sum(H_star)
-l2_loss = l2_obj_func(Hist, H_star)
+l2_loss = l2_obj_func(US_Hist, H_star)
 
 
 # L1
@@ -120,7 +113,53 @@ H_hat = L1_optimization(H_hat, H_star, l1_rate, l1_iter, post_l2_Sum)
 post_l1_sum = sum(H_hat)
 l1_loss = l1_obj_func(H_hat, H_star)
 
-print("\nInitial / Post-L2 / Pre-L1 / Post-L1")
-# print("\n  Hist:", Hist, "/", H_star, "/", H_star, "/", H_hat)
-print("\nSum :", init_sum, "/", post_l2_Sum, "/", post_l2_Sum, "/", post_l1_sum)
-print("\nLoss:", init_loss, "/", l2_loss, "/", pre_l1_loss, "/", l1_loss)
+
+parent_node = [MA, NY, CA, IL, AK]
+
+def generate_child(parent_node, parent_sum, l1_rate, l1_iter, l2_rate, l2_iter): #TODO: Add iterations
+    # TODO: Un-hard-code
+    _MA = [4058, 3022, 7823, 15400, 9314]
+    _NY = [8981, 13230, 2111, 9650, 2883]
+    _CA = [14351, 15444, 15537, 9018, 8681]
+    _IL = [951, 16233, 3320, 267, 15555]
+    _AK = [14535, 700, 15053, 10801, 8323]
+    noised_children = [_MA, _NY, _CA, _IL, _AK]
+    
+    _parent_sum = 0
+    l2_loss_ttl = 0
+    l1_loss_ttl = 0
+    parent_node_hat = parent_node # Placeholder
+    for idx, obj_hist in enumerate(parent_node):
+        
+        init_sum = sum(obj_hist)
+
+        # L2
+        H_star = L2_optimization(obj_hist, noised_children[idx], l2_rate, l2_iter, init_sum)
+        post_l2_Sum = sum(H_star)
+        l2_loss_ttl += l2_obj_func(obj_hist, H_star)
+
+        # L1
+        H_hat = [hs for hs in H_star]
+
+        # Results
+        H_hat = L1_optimization(H_hat, H_star, l1_rate, l1_iter, post_l2_Sum)
+        post_l1_sum = sum(H_hat)
+        l1_loss_ttl += l1_obj_func(H_hat, H_star)
+
+        _parent_sum += post_l1_sum
+        parent_node_hat[idx] = H_hat
+
+    #TODO: compliance check
+    if _parent_sum < 1.5 * parent_sum and _parent_sum > 0.95 * parent_sum:
+        parent_node = parent_node_hat
+        #TODO: Reconstruct Parent hist
+
+    return parent_node, l2_loss_ttl, l1_loss_ttl
+
+
+parent_node, l2_loss_ttl, l1_loss_ttl = generate_child(parent_node, post_l1_sum, l1_rate, l1_iter, l2_rate, l2_iter)
+post_child_gen_sum = sum(k for s in parent_node for k in s)
+
+print("\nInitial / Post-L2 / Pre-L1 / Post-L1 / Post Child")
+print("\nSum :", init_sum, "/", post_l2_Sum, "/", post_l2_Sum, "/", post_l1_sum, "/", post_child_gen_sum)
+print("\nLoss:", init_loss, "/", l2_loss, "/", pre_l1_loss, "/", l1_loss, "/", l2_loss_ttl, "&", l1_loss_ttl)
