@@ -34,13 +34,16 @@ for it in range(l2_iter):
 
     for i, grad in enumerate(grad_list):
         _noised_H[i] = noised_H[i] - l2_rate * grad
-        if _noised_H[i] < 0:
+        if _noised_H[i] < 0: #Nonnegativity Check
             flag = False
             break
 
+    # Population Total Constraint (Easing it to 5% allowance in this)
     if init_sum * 1.5 < sum(_noised_H) or init_sum * 0.95 > sum(_noised_H):
         flag = False
         break
+
+    #TODO: Add any other constraints
 
     if flag == True:
         noised_H = _noised_H
@@ -78,13 +81,17 @@ for it in range(l1_iter):
 
     for i, grad in enumerate(grad_list):
         _H_hat[i] = H_hat[i] - l1_rate * grad
-        if _H_hat[i] < 0:
+        # Nonnegativity and inequality Constraint (Easing it to 5% allowance, Originally == Exact match)
+        if _H_hat[i] < 0 or _H_hat[i] > H_star[i] * 1.5 or _H_hat[i] < H_star[i] * 0.95:
             flag = False
             break
 
-    if init_sum * 1.5 < sum(_H_hat) or init_sum * 0.95 > sum(_H_hat):
+    # Population Total Constraint (Easing it to 5% allowance, Originally == Exact match)
+    if post_l2_Sum * 1.5 < sum(_H_hat) or post_l2_Sum * 0.95 > sum(_H_hat):
         flag = False
         break
+
+    #TODO: Add any other constraints, including integer-check
 
     if flag == True:
         H_hat = _H_hat
