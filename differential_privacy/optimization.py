@@ -34,7 +34,7 @@ for it in range(l2_iter):
 
     for i, grad in enumerate(grad_list):
         _noised_H[i] = noised_H[i] - l2_rate * grad
-        if _noised_H[i] < 0: #Nonnegativity Check
+        if _noised_H[i] < 0:  # Nonnegativity Check
             flag = False
             break
 
@@ -43,7 +43,7 @@ for it in range(l2_iter):
         flag = False
         break
 
-    #TODO: Add any other constraints
+    # TODO: Add any other constraints
 
     if flag == True:
         noised_H = _noised_H
@@ -91,7 +91,7 @@ for it in range(l1_iter):
         flag = False
         break
 
-    #TODO: Add any other constraints, including integer-check
+    # TODO: Add any other constraints, including integer-check
 
     if flag == True:
         H_hat = _H_hat
