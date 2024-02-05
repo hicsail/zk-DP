@@ -13,7 +13,7 @@ def l2_gradient(H, M):
 
 
 def L2_optimization(Hist, noised_H, l2_rate, l2_iter):
-    init_sum = sum(Hist)
+    threshold = sum(Hist)
     for _ in range(l2_iter):
         flag = True
         grad_list = l2_gradient(Hist, noised_H)
@@ -27,7 +27,7 @@ def L2_optimization(Hist, noised_H, l2_rate, l2_iter):
                 break
 
         # Population Total Constraint (Easing it to 5% allowance in this)
-        if init_sum * 1.05 < sum(_noised_H) or init_sum * 0.95 > sum(_noised_H):
+        if threshold * 1.05 < sum(_noised_H) or threshold * 0.95 > sum(_noised_H):
             flag = False
             break
 
@@ -49,33 +49,32 @@ def subgradient(H_star):
 
 
 def L1_optimization(H_star, l1_rate, l1_iter):
-    post_l2_Sum = sum(H_star)
-    H_hat = H_star
+    threshold = sum(H_star)
 
-    for it in range(l1_iter):
+    for _ in range(l1_iter):
         flag = True
         grad_list = subgradient(H_star)
 
-        _H_hat = [0 for _ in H_star]  # Placeholder
+        _H_hat = H_star
 
         for i, grad in enumerate(grad_list):
-            _H_hat[i] = H_hat[i] - l1_rate * grad
+            _H_hat[i] = H_star[i] - l1_rate * grad
             # Nonnegativity and inequality Constraint (Easing it to 5% allowance, Originally == Exact match)
             if _H_hat[i] < 0 or _H_hat[i] > H_star[i] * 1.05 or _H_hat[i] < H_star[i] * 0.95:
                 flag = False
                 break
 
         # Population Total Constraint (Easing it to 5% allowance, Originally == Exact match)
-        if post_l2_Sum * 1.05 < sum(_H_hat) or post_l2_Sum * 0.95 > sum(_H_hat):
+        if threshold * 1.05 < sum(_H_hat) or threshold * 0.95 > sum(_H_hat):
             flag = False
             continue
 
         # TODO: Add any other constraints, including integer-check
 
         if flag == True:
-            H_hat = _H_hat
+            H_star = _H_hat
 
-    return H_hat
+    return H_star
 
 
 def optimization(US_Hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter):
@@ -152,6 +151,7 @@ parent_iter = 100
 parent_node, US_Hist_hat, l2_loss_ttl, l1_loss_ttl = generate_child(parent_node, parent_iter, l1_rate, l1_iter, l2_rate, l2_iter)
 post_child_gen_sum = sum(n for node in parent_node for n in node)
 
+print(l1_loss, l1_loss_ttl)
 print("\nInitial / Post-L2 / Post Child")
 print("\nLoss:", init_loss, "/", l2_loss, "/", l2_loss_ttl)
 print("\nInit US Hist:", US_Hist)
