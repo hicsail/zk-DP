@@ -12,8 +12,9 @@ def l2_gradient(H, M):
     return [-2 * (h - m) for h, m in zip(H, M)]
 
 
-def L2_optimization(Hist, noised_H, l2_rate, l2_iter, init_sum):
-    for it in range(l2_iter):
+def L2_optimization(Hist, noised_H, l2_rate, l2_iter):
+    init_sum = sum(Hist)
+    for _ in range(l2_iter):
         flag = True
         grad_list = l2_gradient(Hist, noised_H)
 
@@ -47,12 +48,15 @@ def subgradient(H_star):
     return [1 if h_s > round(h_s) else -1 if round(h_s) > h_s else 0 for h_s in H_star]
 
 
-def L1_optimization(H_hat, H_star, l1_rate, l1_iter, post_l2_Sum):
+def L1_optimization(H_star, l1_rate, l1_iter):
+    post_l2_Sum = sum(H_star)
+    H_hat = H_star
+
     for it in range(l1_iter):
         flag = True
         grad_list = subgradient(H_star)
 
-        _H_hat = H_hat  # Placeholder
+        _H_hat = [0 for _ in H_star]  # Placeholder
 
         for i, grad in enumerate(grad_list):
             _H_hat[i] = H_hat[i] - l1_rate * grad
@@ -74,24 +78,21 @@ def L1_optimization(H_hat, H_star, l1_rate, l1_iter, post_l2_Sum):
     return H_hat
 
 
-def optimization(US_Hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter, init_sum):
+def optimization(US_Hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter):
     # L2
-    H_star = L2_optimization(US_Hist, noised_H, l2_rate, l2_iter, init_sum)
-    post_l2_Sum = sum(H_star)
+    H_star = L2_optimization(US_Hist, noised_H, l2_rate, l2_iter)
     l2_loss = l2_obj_func(US_Hist, H_star)
 
     # L1
-    H_hat = [hs for hs in H_star]
-    pre_l1_loss = l1_obj_func(H_hat, H_star)
-    H_hat = L1_optimization(H_hat, H_star, l1_rate, l1_iter, post_l2_Sum)
-    post_l1_sum = sum(H_hat)
+    H_hat = L1_optimization(H_star, l1_rate, l1_iter)
     l1_loss = l1_obj_func(H_hat, H_star)
 
-    return l2_loss, post_l2_Sum, pre_l1_loss, post_l1_sum, l1_loss, H_hat
+    return l2_loss, l1_loss, H_hat
 
 
-def generate_child(parent_node, parent_sum, l1_rate, l1_iter, l2_rate, l2_iter, parent_iter):
-    # TODO: Un-hard-code
+def generate_child(parent_node, parent_iter, l1_rate, l1_iter, l2_rate, l2_iter):
+    parent_sum = sum(n for node in parent_node for n in node)
+
     _MA = [4058, 3022, 7823, 15400, 9314]
     _NY = [8981, 13230, 2111, 9650, 2883]
     _CA = [14351, 15444, 15537, 9018, 8681]
@@ -99,7 +100,6 @@ def generate_child(parent_node, parent_sum, l1_rate, l1_iter, l2_rate, l2_iter, 
     _AK = [14535, 700, 15053, 10801, 8323]
     noised_children = [_MA, _NY, _CA, _IL, _AK]
 
-    _parent_sum = 0
     l2_loss_ttl = 0
     l1_loss_ttl = 0
 
@@ -109,17 +109,13 @@ def generate_child(parent_node, parent_sum, l1_rate, l1_iter, l2_rate, l2_iter, 
         temp_l1_loss = 0
 
         for idx, obj_hist in enumerate(parent_node_hat):
-            init_sum = sum(obj_hist)
-
-            l2_loss, post_l2_Sum, pre_l1_loss, post_l1_sum, l1_loss, H_hat = optimization(
-                obj_hist, noised_children[idx], l1_rate, l1_iter, l2_rate, l2_iter, init_sum
-            )
+            l2_loss, l1_loss, H_hat = optimization(obj_hist, noised_children[idx], l1_rate, l1_iter, l2_rate, l2_iter)
 
             temp_l2_loss += l2_loss
             temp_l1_loss += l1_loss
 
-            _parent_sum += post_l1_sum
             parent_node_hat[idx] = H_hat
+            _parent_sum = sum(n for node in parent_node for n in node)
 
         # TODO: compliance check
         if _parent_sum < 1.05 * parent_sum and _parent_sum > 0.95 * parent_sum:
@@ -142,10 +138,7 @@ AK = [14540, 713, 15048, 10795, 8319]
 
 parent_node = [MA, NY, CA, IL, AK]
 US_Hist = [sum(values) for values in zip(*parent_node)]
-
-noised_H = [42997, 48355, 45541, 45180, 44754]  # TODO: Un-hard-code
-
-init_sum = sum(US_Hist)
+noised_H = [42997, 48355, 45541, 45180, 44754]
 init_loss = l2_obj_func(US_Hist, noised_H)
 
 l2_rate = 0.001
@@ -153,16 +146,14 @@ l2_iter = 1000
 l1_rate = 0.01
 l1_iter = 1000
 
-
-l2_loss, post_l2_Sum, pre_l1_loss, post_l1_sum, l1_loss, _ = optimization(US_Hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter, init_sum)
+l2_loss, l1_loss, _ = optimization(US_Hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter)
 
 parent_iter = 100
-parent_node, US_Hist_hat, l2_loss_ttl, l1_loss_ttl = generate_child(parent_node, post_l1_sum, l1_rate, l1_iter, l2_rate, l2_iter, parent_iter)
-post_child_gen_sum = sum(k for s in parent_node for k in s)
+parent_node, US_Hist_hat, l2_loss_ttl, l1_loss_ttl = generate_child(parent_node, parent_iter, l1_rate, l1_iter, l2_rate, l2_iter)
+post_child_gen_sum = sum(n for node in parent_node for n in node)
 
-print("\nInitial / Post-L2 / Pre-L1 / Post-L1 / Post Child")
-print("\nLoss:", init_loss, "/", l2_loss, "/", pre_l1_loss, "/", l1_loss, "/", l2_loss_ttl, "&", l1_loss_ttl)
-
+print("\nInitial / Post-L2 / Post Child")
+print("\nLoss:", init_loss, "/", l2_loss, "/", l2_loss_ttl)
 print("\nInit US Hist:", US_Hist)
 print("\nResulting US Hist:", US_Hist_hat)
 assert US_Hist_hat == [43060.33774073523, 49268.885995691875, 45477.37740735129, 45137.13767719148, 44745.89351598362]
