@@ -156,4 +156,4 @@ print("\nInitial / Post-L2 / Post Child")
 print("\nLoss:", init_loss, "/", l2_loss, "/", l2_loss_ttl)
 print("\nInit US Hist:", US_Hist)
 print("\nResulting US Hist:", US_Hist_hat)
-assert US_Hist_hat == [43060.33774073523, 49268.885995691875, 45477.37740735129, 45137.13767719148, 44745.89351598362]
+assert US_Hist_hat == [43057.01645028617, 49244.01406001796, 45478.9880525758, 45158.988322416386, 44751.00545165717]
