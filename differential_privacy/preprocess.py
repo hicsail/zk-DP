@@ -18,7 +18,11 @@ def preprocess(df):
 
         else:
             fillnas(df, col)
-        df[col] = df[col].apply(SecretInt)
+
+    col = "PUMA"
+    sdf = df[col]
+
+    return sdf
 
 
 def fillnas(df, col):

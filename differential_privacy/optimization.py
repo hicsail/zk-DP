@@ -1,40 +1,25 @@
 import math
+from picozk import *
 
 # https://systems.cs.columbia.edu/private-systems-class/papers/Abowd2019Census.pdf
 
 
 # L2 Norm
 def l2_obj_func(H_list, M_list):
-    return math.sqrt(sum(pow((h - m), 2) for h, m in zip(H_list, M_list)))
+    return SecretInt(math.sqrt(sum(pow((h - m), 2) for h, m in zip(H_list, M_list))))
 
 
 def l2_gradient(H, M):
     return [-2 * (h - m) for h, m in zip(H, M)]
 
 
-def L2_optimization(Hist, noised_H, l2_rate, l2_iter):
-    threshold = sum(Hist)
+def L2_optimization(Hist, noisy_H, l2_rate, l2_iter):
     for _ in range(l2_iter):
-        flag = True
-        grad_list = l2_gradient(Hist, noised_H)
-
-        _noised_H = noised_H  # Placeholder
-
+        grad_list = l2_gradient(Hist, noisy_H)
         for i, grad in enumerate(grad_list):
-            _noised_H[i] = noised_H[i] - l2_rate * grad
-            if _noised_H[i] < 0:  # Nonnegativity Check
-                flag = False
-                break
+            noisy_H[i] = noisy_H[i] - l2_rate * grad
 
-        # Population Total Constraint (Easing it to 5% allowance in this)
-        if threshold * 1.05 < sum(_noised_H) or threshold * 0.95 > sum(_noised_H):
-            flag = False
-            break
-
-        if flag == True:
-            noised_H = _noised_H
-
-    return noised_H
+    return noisy_H
 
 
 def l1_obj_func(H_hat, H_star):
@@ -120,31 +105,37 @@ def generate_child(parent_node, parent_iter, l1_rate, l1_iter, l2_rate, l2_iter)
     return parent_node, US_Hist_hat, l2_loss_ttl, l1_loss_ttl
 
 
-# Initialization of variables
-#  r0,   r1,   r2,   r3,   r4
-MA = [4062, 3117, 9821, 15403, 9302]
-NY = [8981, 13251, 2116, 9647, 2888]
-CA = [14446, 16138, 15434, 9055, 8586]
-IL = [1057, 16122, 3315, 262, 15654]
-AK = [14540, 713, 15048, 10795, 8319]
+if __name__ == "__main__":
+    # Initialization of variables
+    #  r0,   r1,   r2,   r3,   r4
+    MA = [4062, 3117, 9821, 15403, 9302]
+    NY = [8981, 13251, 2116, 9647, 2888]
+    CA = [14446, 16138, 15434, 9055, 8586]
+    IL = [1057, 16122, 3315, 262, 15654]
+    AK = [14540, 713, 15048, 10795, 8319]
 
+    parent_node = [MA, NY, CA, IL, AK]
+    US_Hist = [sum(values) for values in zip(*parent_node)]
+    noised_H = [42997, 48355, 45541, 45180, 44754]
+    init_loss = int(l2_obj_func(US_Hist, noised_H))
 
-parent_node = [MA, NY, CA, IL, AK]
-US_Hist = [sum(values) for values in zip(*parent_node)]
-noised_H = [42997, 48355, 45541, 45180, 44754]
-init_loss = l2_obj_func(US_Hist, noised_H)
+    l2_rate = 0.001
+    l2_iter = 1000
+    l1_rate = 0.001
+    l1_iter = 1000
 
-l2_rate = 0.001
-l2_iter = 1000
-l1_rate = 0.001
-l1_iter = 1000
+    l2_loss, l1_loss, _ = optimization(US_Hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter)
 
-l2_loss, l1_loss, _ = optimization(US_Hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter)
+    parent_iter = 100
+    parent_node, US_Hist_hat, l2_loss_ttl, l1_loss_ttl = generate_child(parent_node, parent_iter, l1_rate, l1_iter, l2_rate, l2_iter)
 
-parent_iter = 100
-parent_node, US_Hist_hat, l2_loss_ttl, l1_loss_ttl = generate_child(parent_node, parent_iter, l1_rate, l1_iter, l2_rate, l2_iter)
+    p = pow(2, 127) - 1
 
-print("\nInitial / Post-L2 / Post Child")
-print("\nLoss:", init_loss, "/", l2_loss, "/", l2_loss_ttl)
-print("\nInit US Hist:", US_Hist)
-print("\nResulting US Hist:", US_Hist_hat)
+    with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
+        sec_init_loss = SecretInt(init_loss)
+        assert0(mux((sec_init_loss > int(l2_loss_ttl)), 0, 1))
+
+        print("\nInitial / Post-L2 / Post Child")
+        print("\nLoss:", init_loss, "/", l2_loss, "/", l2_loss_ttl)
+        print("\nInit US Hist:", US_Hist)
+        print("\nResulting US Hist:", US_Hist_hat)
