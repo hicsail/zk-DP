@@ -19,11 +19,6 @@ def preprocess(df):
         else:
             fillnas(df, col)
 
-    col = "PUMA"
-    sdf = df[col]
-
-    return sdf
-
 
 def fillnas(df, col):
     # Fill cells with value 'N' and negative values with the Global mean(excl. neg values)

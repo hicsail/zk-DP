@@ -23,8 +23,9 @@ if __name__ == "__main__":
     keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
 
     # Pre-process
-    sdf = preprocess(df)
-    sdf.apply(update_hist)
+    preprocess(df)
+    col = "PUMA"
+    df[col].apply(update_hist)
     print("Init  Hist:", histogram)
 
     with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
@@ -35,14 +36,14 @@ if __name__ == "__main__":
 
         # Commit original data
         poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-        hashed_df = poseidon_hash.hash(list(sdf))
+        hashed_df = poseidon_hash.hash(list(df[col]))
 
         # Noise Addition
         sec_H = ZKList(histogram)
         noisy_hist = add_noise(sec_H, p, prf_func)
         print("Noisy Hist:", noisy_hist)
 
-        # Optimization done outside of ZK, but proof inside ZK
+        # Optimization done outside of ZK, but Proof is performed inside ZK
         l2_rate = 0.001
         l2_iter = 1000
         init_l2norm = calc_l2_gnorm(histogram, noisy_hist)
