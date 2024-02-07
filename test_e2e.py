@@ -22,13 +22,14 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         df = pd.read_csv("ma2019.csv")
         key = [1987034928369859712]
         keys = [1987034928369859712, 1987034925329849712, 15528198805165525]
-        sdf = preprocess(df)
-        sdf.apply(update_hist)
+        preprocess(df)
+        col = "PUMA"
+        df[col].apply(update_hist)
 
         with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
-            sdf = sdf[:10]
+            df = df[:10]
             poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-            hashed_df = poseidon_hash.hash(list(sdf))
+            hashed_df = poseidon_hash.hash(list(df[col]))
             _key = poseidon_hash.hash(keys)
 
             # Implementation Body

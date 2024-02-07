@@ -49,17 +49,17 @@ if __name__ == "__main__":
     sizes = [int(i * size) for i in interval]
     res_list = []
 
-    _sdf = preprocess(df)
-
+    preprocess(df)
+    col = "PUMA"
     for s in sizes:
         # Pre-process
-        sdf = _sdf[:s]
-        sdf.apply(update_hist)
+        _df = df[:s]
+        _df[col].apply(update_hist)
         print("Init  Hist:", histogram)
 
         with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):  # TODO: Modify so that we can experiment both posiedon hash and 3DES
             poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-            hashed_df = poseidon_hash.hash(list(sdf))
+            hashed_df = poseidon_hash.hash(list(_df[col]))
 
             sec_H = ZKList(histogram)
 
