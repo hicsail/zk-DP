@@ -4,7 +4,7 @@ from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
 from differential_privacy.prf import TripleDES_prf, Poseidon_prf, AES_prf
-from differential_privacy.optimization import L2_optimization, l2_obj_func
+from differential_privacy.optimization import L2_optimization, calc_l2_gnorm
 
 SCALE = 1000
 histogram = [0, 0, 0, 0, 0]
@@ -45,11 +45,11 @@ if __name__ == "__main__":
         # Optimization done outside of ZK, but proof inside ZK
         l2_rate = 0.001
         l2_iter = 1000
-        init_norm = l2_obj_func(histogram, noisy_hist)
+        init_l2norm = calc_l2_gnorm(histogram, noisy_hist)
         opt_hist = L2_optimization(histogram, noisy_hist, l2_rate, l2_iter)
         print("Opt Hist  :", opt_hist)
 
-        res_norm = l2_obj_func(histogram, opt_hist)
-        grad_check = mux((res_norm < init_norm), 0, 1)
-        assert0(grad_check)
-        assert val_of(grad_check) == 0
+        res_l2norm = calc_l2_gnorm(histogram, opt_hist)
+        gnorm_check = mux((res_l2norm < init_l2norm), 0, 1)
+        assert0(gnorm_check)
+        assert val_of(gnorm_check) == 0

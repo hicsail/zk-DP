@@ -4,24 +4,28 @@ from picozk import *
 # https://systems.cs.columbia.edu/private-systems-class/papers/Abowd2019Census.pdf
 
 
-# L2 Norm
-def l2_obj_func(H_list, M_list):
-    return SecretInt(math.sqrt(sum(pow((h - m), 2) for h, m in zip(H_list, M_list))))
+def l2_obj_func(histogram, noisy_hist):
+    return SecretInt(math.sqrt(sum(pow((h - m), 2) for h, m in zip(histogram, noisy_hist))))
 
 
-def l2_gradient(H, M):
-    return [-2 * (h - m) for h, m in zip(H, M)]
+def l2_gradient(histogram, noisy_hist):
+    return [-2 * (h - m) for h, m in zip(histogram, noisy_hist)]
 
 
-def L2_optimization(Hist, noisy_H, l2_rate, l2_iter):
+def calc_l2_gnorm(histogram, noisy_hist):
+    grad_vec = l2_gradient(histogram, noisy_hist)
+    return SecretInt(math.sqrt(sum([g**2 for g in grad_vec])))
+
+
+def L2_optimization(histogram, noisy_hist, l2_rate, l2_iter):
     for _ in range(l2_iter):
-        grad_list = l2_gradient(Hist, noisy_H)
-        for i, grad in enumerate(grad_list):
-            noisy_H[i] = noisy_H[i] - l2_rate * grad
+        grad_vec = l2_gradient(histogram, noisy_hist)
+        for i, grad in enumerate(grad_vec):
+            noisy_hist[i] = noisy_hist[i] - l2_rate * grad
+    return noisy_hist
 
-    return noisy_H
 
-
+# We are not using the following code
 def l1_obj_func(H_hat, H_star):
     return sum(-(h - round(h_s) * (h_s - round(h_s))) for h, h_s in zip(H_hat, H_star))
 
@@ -58,10 +62,10 @@ def L1_optimization(H_star, l1_rate, l1_iter):
     return H_hat
 
 
-def optimization(obj_hist, noised_H, l1_rate, l1_iter, l2_rate, l2_iter):
+def optimization(histogram, noisy_hist, l1_rate, l1_iter, l2_rate, l2_iter):
     # L2
-    H_star = L2_optimization(obj_hist, noised_H, l2_rate, l2_iter)
-    l2_loss = l2_obj_func(obj_hist, H_star)
+    H_star = L2_optimization(histogram, noisy_hist, l2_rate, l2_iter)
+    l2_loss = l2_obj_func(histogram, H_star)
 
     # L1
     H_hat = L1_optimization(H_star, l1_rate, l1_iter)
