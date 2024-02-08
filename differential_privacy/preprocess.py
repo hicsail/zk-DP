@@ -16,6 +16,9 @@ def preprocess(df):
 
             df[col] = df[col].replace(mapping)
 
+        elif col == "HOUSING_TYPE":
+            df[col] = df[col].astype(int)
+
         else:
             fillnas(df, col)
 
