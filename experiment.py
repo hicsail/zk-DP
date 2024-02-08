@@ -6,7 +6,35 @@ from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
 from differential_privacy.prf import TripleDES_prf, Poseidon_prf, AES_prf
 import matplotlib.pyplot as plt
-from experiment.counter import count
+
+SCALE = 1000
+histogram = [0, 0, 0, 0, 0]
+
+
+def update_hist(x):
+    histogram[x] = histogram[x] + SCALE
+
+
+def count(s):
+    # Define the file path
+    file_path = "irs/picozk_test.rel"
+
+    # Initialize a variable to count lines
+    line_count = 0
+
+    # Open the file and read line by line
+    with open(file_path, "r") as file:
+        for line in file:
+            line_count += 1
+
+    million = 1000000
+    line_count /= million
+
+    # Print the total number of lines
+    print(f"\nSize of input: {s}, Total number of lines in the file: {line_count} (* 10^6)")
+
+    return line_count
+
 
 if __name__ == "__main__":
     p = pow(2, 127) - 1
@@ -21,22 +49,25 @@ if __name__ == "__main__":
     sizes = [int(i * size) for i in interval]
     res_list = []
 
-    with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):  # TODO: Modify so that we can experiment both posiedon hash and 3DES
-        # Replace negative values and N with ave.(excl. neg values)
-        preprocess(df)
+    preprocess(df)
+    col = "PUMA"
+    for s in sizes:
+        # Pre-process
+        _df = df[:s]
+        _df[col].apply(update_hist)
+        print("Init  Hist:", histogram)
 
-        for s in sizes:
-            col = "PUMA"
-            _df = df.iloc[:s].copy()
-            sdf = _df[col]
+        with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):  # TODO: Modify so that we can experiment both posiedon hash and 3DES
             poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-            hashed_df = poseidon_hash.hash(list(sdf))
-            _key = poseidon_hash.hash(keys)
+            hashed_df = poseidon_hash.hash(list(_df[col]))
+
+            sec_H = ZKList(histogram)
 
             # Triple DES
             start = time.time()
             prf_func = TripleDES_prf(keys, p)
-            add_noise(sdf, p, hashed_df, prf_func)
+            noisy_hist = add_noise(sec_H, p, prf_func)
+            print("Noisy Hist:", noisy_hist)
             end = time.time()
             line_count = count(s)
             res_list.append([s, line_count, end - start, "tdes"])
@@ -44,7 +75,8 @@ if __name__ == "__main__":
             # Poseidon Hash
             start = time.time()
             prf_func = Poseidon_prf(keys, p)
-            add_noise(sdf, p, hashed_df, prf_func)
+            noisy_hist = add_noise(sec_H, p, prf_func)
+            print("Noisy Hist:", noisy_hist)
             end = time.time()
             line_count = count(s)
             res_list.append([s, line_count, end - start, "poseidon"])
@@ -52,7 +84,8 @@ if __name__ == "__main__":
             # AES
             start = time.time()
             prf_func = AES_prf(key, p)
-            add_noise(sdf, p, hashed_df, prf_func)
+            noisy_hist = add_noise(sec_H, p, prf_func)
+            print("Noisy Hist:", noisy_hist)
             end = time.time()
             line_count = count(s)
             res_list.append([s, line_count, end - start, "aes"])
