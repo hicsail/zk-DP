@@ -41,31 +41,22 @@ if __name__ == "__main__":
 
         # Commit original data
         poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-        hashed_df = poseidon_hash.hash(list(df[col]))
+        hashed_df = poseidon_hash.hash(list(df[col].apply(SecretInt)))
+        reveal(hashed_df)  # Assert hashed_df == pub hased df
 
         # Noise Addition
         sec_H = ZKList(histogram)
-        noisy_hist = add_noise(sec_H, p, prf_func)
-        print("Noisy Hist:", noisy_hist)
-
-        # Optimization done outside of ZK, but Proof is performed inside ZK
-        l2_rate = 0.001
-        l2_iter = 1000
-        init_l2norm = calc_l2_gnorm(histogram, noisy_hist)
-        opt_hist = L2_optimization(histogram, noisy_hist, l2_rate, l2_iter)
-        print("Opt Hist  :", opt_hist)
-
-        res_l2norm = calc_l2_gnorm(histogram, opt_hist)
-        gnorm_check = mux((res_l2norm < init_l2norm), 0, 1)
-        assert0(gnorm_check)
-        assert val_of(gnorm_check) == 0
+        parent_hist = add_noise(sec_H, p, prf_func)
+        print("Noisy Parent Hist:", parent_hist)
 
         ## Child Histogram
 
         c_col = "HOUSING_TYPE"
         print("\n Experimenting with child nodes querying ", c_col)
 
-        for idx, _ in enumerate(opt_hist):
+        res_parent = []
+
+        for idx, _ in enumerate(parent_hist):
             df[c_col][df[col] == idx].apply(update_childHist)
             print("\nInit Child Hist:", child_histogram)
 
@@ -77,16 +68,21 @@ if __name__ == "__main__":
             # Optimization done outside of ZK, but Proof is performed inside ZK
             l2_rate = 0.001
             l2_iter = 1000
-            init_child_l2norm = calc_l2_gnorm(child_histogram, noisy_child_hist)
-            opt_child_hist = L2_optimization(child_histogram, noisy_child_hist, l2_rate, l2_iter)
-            print("Opt Child Hist  :", opt_child_hist)
+            init_child_l2norm = calc_l2_gnorm(parent_hist[idx], sec_child_H)
+            opt_child_hist = L2_optimization(parent_hist[idx], noisy_child_hist, l2_rate, l2_iter)
+            print("Optimized Child Hist:", opt_child_hist)
 
-            res_child_l2norm = calc_l2_gnorm(child_histogram, opt_child_hist)
+            sec_opt_child_H = ZKList(opt_child_hist)
+            res_child_l2norm = calc_l2_gnorm(parent_hist[idx], sec_opt_child_H)
 
             # ZK Proof
-            gnorm_check = mux((res_child_l2norm < init_child_l2norm), 0, 1)
+            gnorm_check = mux((res_child_l2norm - init_child_l2norm < -(10**10)), 0, 1)
             assert0(gnorm_check)
 
-            # Proof that the sum of the optimized child histograms stays within 5% of the optimized parent histogram
-            assert sum(opt_child_hist) < 1.05 * opt_hist[idx] and sum(opt_child_hist) > 0.95 * opt_hist[idx]
             child_histogram = [0, 0, 0]
+            res_parent.append(sum(opt_child_hist))
+
+        print("Noisy Parent Hist:", parent_hist)
+        print("Aggr. child hists", res_parent)
+        for idx, val in enumerate(res_parent):
+            assert val < 1.001 * parent_hist[idx] and val > 0.999 * parent_hist[idx]

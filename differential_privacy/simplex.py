@@ -1,20 +1,49 @@
 import numpy as np
 
 
-def initialize_tableau(histogram, child_histogram, noisy_child_hist):
-    # The objective function coefficients
-    obj = -1 * (np.array(child_histogram) - np.array(noisy_child_hist))
+def init_prime_tableau(coeffs, constraints):
+    coeffs = np.array(coeffs)
+    constraints = np.array(constraints)
+    coeffs *= -1
+
     # Add zero coefficients for the slack variable and RHS
-    obj = np.concatenate((obj, [0] * 2))  # Add a zero for the slack variable
+    obj = np.concatenate((coeffs, [0] * (len(constraints) + 1)))
 
     # The constraints coefficients
-    constraints = np.array([1] * 3 + [0])  # The last 0 is for the slack variable
-
-    # The RHS of the constraints
-    b = np.array([1.05 * histogram[0]])
+    eyes = np.eye(len(constraints))
+    last_col = constraints[:, -1].reshape(-1, 1)
+    constraints_ = constraints[:, :-1]
+    concatenated = np.hstack((constraints_, eyes))
+    constraints = np.hstack((concatenated, last_col))
 
     # Combine the constraints and the objective into the tableau
-    tableau = np.vstack([obj, np.concatenate((constraints, b))])
+    tableau = np.vstack([obj, constraints])
+    lmc = np.array([1] + [0] * (len(tableau) - 1))
+    lmc = lmc.reshape(-1, 1)
+    tableau = np.hstack((lmc, tableau))
+
+    return tableau
+
+
+def init_dual_tableau(coeffs, constraints):
+    coeffs = np.array(coeffs)
+    constraints = np.array(constraints)
+
+    # Add zero coefficients for the slack variable and RHS
+    obj = np.concatenate((coeffs, [0] * (len(constraints) + 1)))
+
+    # The constraints coefficients
+    eyes = np.eye(len(constraints))
+    last_col = constraints[:, -1].reshape(-1, 1)
+    constraints_ = constraints[:, :-1]
+    concatenated = np.hstack((constraints_, eyes))
+    constraints = np.hstack((concatenated, last_col))
+
+    # Combine the constraints and the objective into the tableau
+    tableau = np.vstack([obj, constraints])
+    lmc = np.array([1] + [0] * (len(tableau) - 1))
+    lmc = lmc.reshape(-1, 1)
+    tableau = np.hstack((lmc, tableau))
 
     return tableau
 
@@ -65,38 +94,48 @@ def simplex_method(_tableau):
 
 
 # Example:
-histogram = [0.2, 0.3, 0.1, 0.1, 0.3]
-noisy_hist = [0, 0, 0, 0, 0]
-child_histogram = [0.05, 0.1, 0.15]
-noisy_child_hist = [0, 0, 0]
+coeffs = [2.0, 3.0]
+constraints = [[1.0, 2.0, 10], [2.0, 1.0, 8]]
+_p_tableau = init_prime_tableau(coeffs, constraints)
 
-# tableau = initialize_tableau(histogram, child_histogram, noisy_child_hist)
+assert np.array_equal(_p_tableau, np.array([[1.0, -2.0, -3.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 10.0], [0.0, 2.0, 1.0, 0.0, 1.0, 8.0]]))
+print("\nBefore", _p_tableau)
 
-_tableau = np.array(
-    [
-        [ 1.0,-2.0,-3.0, 0.0, 0.0, 0.0],
-        [ 0.0, 1.0, 2.0, 1.0, 0.0,10.0],
-        [ 0.0, 2.0, 1.0, 0.0, 1.0, 8.0]
-    ]
-)
-print("\nBefore", _tableau)
-
-tableau = simplex_method(_tableau)
+p_tableau = simplex_method(_p_tableau)
 
 # Display the final tableau
-print("\nAfter", tableau)
+print("\nAfter", p_tableau)
 
-_transposed = np.array(
-    [   
-        [ 1.0,-10.0,-8.0, 0.0, 0.0, 0.0],
-        [ 0.0, 1.0, 2.0, 1.0, 0.0, 2.0],
-        [ 0.0, 2.0, 1.0, 0.0, 1.0, 3.0]
-    ]
-)
+_d_tableau = init_dual_tableau(coeffs, constraints)
 
-print("\nBefore", _transposed)
+assert np.array_equal(_d_tableau, np.array([[1.0, -10.0, -8.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 2.0], [0.0, 2.0, 1.0, 0.0, 1.0, 3.0]]))
 
-transposed = simplex_method(_transposed)
+print("\nBefore", _d_tableau)
+
+d_tableau = simplex_method(_d_tableau)
 
 # Display the final tableau
-print("\nAfter", transposed)
+print("\nAfter", d_tableau)
+assert d_tableau[0, -1] == p_tableau[0, -1]
+
+# _tableau = np.array(
+#     [
+#         [ 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+#         [ 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 2254000.0*1.05],
+#         [ 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2254000.0*0.95],
+#     ]
+# )
+# print("\nBefore", _tableau)
+
+# tableau = simplex_method(_tableau)
+
+# # Display the final tableau
+# print("\nAfter", tableau)
+
+# _transposed = np.array(
+#     [
+#         [ 1.0,-2254000.0*1.05,-2254000.0*0.95, 0.0, 0.0, 0.0],
+#         [ 0.0, 1.0, 1.0, 1.0, 0.0, -1.0],
+#         [ 0.0, 1.0, 1.0, 0.0, 1.0, -1.0],
+#     ]
+# )
