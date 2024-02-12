@@ -5,17 +5,20 @@ from picozk.poseidon_hash import PoseidonHash
 from differential_privacy.add_noise import add_noise
 from differential_privacy.preprocess import preprocess
 from differential_privacy.prf import TripleDES_prf, Poseidon_prf, AES_prf
-from differential_privacy.optimization import L2_optimization, l2_obj_func
+from differential_privacy.optimization import L2_optimization, calc_l2_gnorm
 
 
 class TestPicoZKEndToEnd(unittest.TestCase):
     def test_e2e_process(self):
         SCALE = 1000
-
         histogram = [0, 0, 0, 0, 0]
+        child_histogram = [0, 0, 0]
 
         def update_hist(x):
             histogram[x] = histogram[x] + SCALE
+
+        def update_childHist(x):
+            child_histogram[x - 1] = child_histogram[x - 1] + SCALE
 
         p = pow(2, 127) - 1
         # https://media.githubusercontent.com/media/usnistgov/SDNist/main/nist%20diverse%20communities%20data%20excerpts/massachusetts/ma2019.csv
@@ -29,27 +32,57 @@ class TestPicoZKEndToEnd(unittest.TestCase):
         with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
             df = df[:10]
             poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-            hashed_df = poseidon_hash.hash(list(df[col]))
-            _key = poseidon_hash.hash(keys)
+            hashed_df = poseidon_hash.hash(list(df[col].apply(SecretInt)))
+            reveal(hashed_df)  # Assert hashed_df == pub hased df
 
             # Implementation Body
             sec_H = ZKList(histogram)
             prf_func = TripleDES_prf(keys, p)
-            noisy_hist = add_noise(sec_H, p, prf_func)
+            parent_hist = add_noise(sec_H, p, prf_func)
 
             prf_func = Poseidon_prf(keys, p)
-            noisy_hist = add_noise(sec_H, p, prf_func)
+            parent_hist = add_noise(sec_H, p, prf_func)
 
             prf_func = AES_prf(key, p)
-            noisy_hist = add_noise(sec_H, p, prf_func)
+            parent_hist = add_noise(sec_H, p, prf_func)
 
-            # Optimization done outside of ZK, but proof inside ZK
-            l2_rate = 0.001
-            l2_iter = 1000
-            init_norm = l2_obj_func(histogram, noisy_hist)
-            opt_hist = L2_optimization(histogram, noisy_hist, l2_rate, l2_iter)
-            res_norm = l2_obj_func(histogram, opt_hist)
-            assert val_of(init_norm) > val_of(res_norm)
+            ## Child Histogram
+
+            c_col = "HOUSING_TYPE"
+            print("\n Experimenting with child nodes querying ", c_col)
+
+            res_parent = []
+
+            for idx, _ in enumerate(parent_hist):
+                df[c_col][df[col] == idx].apply(update_childHist)
+                print("\nInit Child Hist:", child_histogram)
+
+                # Noise Addition
+                sec_child_H = ZKList(child_histogram)
+                noisy_child_hist = add_noise(sec_child_H, p, prf_func)
+                print("Noisy Child Hist:", noisy_child_hist)
+
+                # Optimization done outside of ZK, but Proof is performed inside ZK
+                l2_rate = 0.001
+                l2_iter = 1000
+                init_child_l2norm = calc_l2_gnorm(parent_hist[idx], sec_child_H)
+                opt_child_hist = L2_optimization(parent_hist[idx], noisy_child_hist, l2_rate, l2_iter)
+                print("Optimized Child Hist:", opt_child_hist)
+
+                sec_opt_child_H = ZKList(opt_child_hist)
+                res_child_l2norm = calc_l2_gnorm(parent_hist[idx], sec_opt_child_H)
+
+                # ZK Proof
+                gnorm_check = mux((res_child_l2norm - init_child_l2norm < -(10**10)), 0, 1)
+                assert0(gnorm_check)
+
+                child_histogram = [0, 0, 0]
+                res_parent.append(sum(opt_child_hist))
+
+            print("Noisy Parent Hist:", parent_hist)
+            print("Aggr. child hists", res_parent)
+            for idx, val in enumerate(res_parent):
+                assert val < 1.01 * parent_hist[idx] and val > 0.91 * parent_hist[idx]
 
 
 if __name__ == "__main__":

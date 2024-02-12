@@ -57,17 +57,19 @@ if __name__ == "__main__":
         _df[col].apply(update_hist)
         print("Init  Hist:", histogram)
 
-        with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):  # TODO: Modify so that we can experiment both posiedon hash and 3DES
+        with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
             poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
-            hashed_df = poseidon_hash.hash(list(_df[col]))
+            hashed_df = poseidon_hash.hash(list(df[col].apply(SecretInt)))
+            reveal(hashed_df)  # Assert hashed_df == pub hased df
 
+            # Noise Addition
             sec_H = ZKList(histogram)
 
             # Triple DES
             start = time.time()
             prf_func = TripleDES_prf(keys, p)
-            noisy_hist = add_noise(sec_H, p, prf_func)
-            print("Noisy Hist:", noisy_hist)
+            parent_hist = add_noise(sec_H, p, prf_func)
+            print("Noisy Parent Hist:", parent_hist)
             end = time.time()
             line_count = count(s)
             res_list.append([s, line_count, end - start, "tdes"])
@@ -75,8 +77,8 @@ if __name__ == "__main__":
             # Poseidon Hash
             start = time.time()
             prf_func = Poseidon_prf(keys, p)
-            noisy_hist = add_noise(sec_H, p, prf_func)
-            print("Noisy Hist:", noisy_hist)
+            parent_hist = add_noise(sec_H, p, prf_func)
+            print("Noisy Parent Hist:", parent_hist)
             end = time.time()
             line_count = count(s)
             res_list.append([s, line_count, end - start, "poseidon"])
@@ -84,8 +86,8 @@ if __name__ == "__main__":
             # AES
             start = time.time()
             prf_func = AES_prf(key, p)
-            noisy_hist = add_noise(sec_H, p, prf_func)
-            print("Noisy Hist:", noisy_hist)
+            parent_hist = add_noise(sec_H, p, prf_func)
+            print("Noisy Parent Hist:", parent_hist)
             end = time.time()
             line_count = count(s)
             res_list.append([s, line_count, end - start, "aes"])
