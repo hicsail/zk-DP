@@ -11,6 +11,7 @@ def init_prime_tableau(coeffs, constraints):
 
     # The constraints coefficients
     eyes = np.eye(len(constraints))
+    eyes[-1, -1] = -eyes[-1, -1]
     last_col = constraints[:, -1].reshape(-1, 1)
     constraints_ = constraints[:, :-1]
     concatenated = np.hstack((constraints_, eyes))
@@ -95,24 +96,47 @@ def simplex_method(_tableau):
 
 
 # Example:
-coeffs = [2.0, 3.0]
-constraints = [[1.0, 2.0, 10], [2.0, 1.0, 8]]
+# coeffs = [2.0, 3.0]
+# constraints = [[1.0, 2.0, 10], [2.0, 1.0, 8]]
+# _p_tableau = init_prime_tableau(coeffs, constraints)
+
+# assert np.array_equal(_p_tableau, np.array([[1.0, -2.0, -3.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 10.0], [0.0, 2.0, 1.0, 0.0, 1.0, 8.0]]))
+# print("\nBefore", _p_tableau)
+
+# p_tableau = simplex_method(_p_tableau)
+
+# # Display the final tableau
+# print("\nAfter", p_tableau)
+
+# _d_tableau = init_dual_tableau(coeffs, constraints)
+
+# print("\nBefore", _d_tableau)
+# assert np.array_equal(_d_tableau, np.array([[1.0, -10.0, -8.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 2.0], [0.0, 2.0, 1.0, 0.0, 1.0, 3.0]]))
+# d_tableau = simplex_method(_d_tableau)
+
+# # Display the final tableau
+# print("\nAfter", d_tableau)
+# assert d_tableau[0, -1] == p_tableau[0, -1]
+
+
+# With un-zkfied Histograms:
+child_hists = [[2204177, 109177, 190177], [1421177, 99177, 237177], [1349177, 122177, 125177], [1348177, 109177, 96177], [1254177, 112177, 104177]]
+parent_hist = [2337177, 1591177, 1430177, 1387177, 1304177]
+
+
+noisy_child_hist = child_hists[0]
+coeffs = [1.0, 1.0, 1.0]
+constraints = [[1.0, 1.0, 1.0, parent_hist[0]*1.001], [1.0, 1.0, 1.0, parent_hist[0]*0.999]]
 _p_tableau = init_prime_tableau(coeffs, constraints)
-
-assert np.array_equal(_p_tableau, np.array([[1.0, -2.0, -3.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 10.0], [0.0, 2.0, 1.0, 0.0, 1.0, 8.0]]))
-print("\nBefore", _p_tableau)
-
-p_tableau = simplex_method(_p_tableau)
-
-# Display the final tableau
-print("\nAfter", p_tableau)
-
 _d_tableau = init_dual_tableau(coeffs, constraints)
 
-print("\nBefore", _d_tableau)
-assert np.array_equal(_d_tableau, np.array([[1.0, -10.0, -8.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 2.0], [0.0, 2.0, 1.0, 0.0, 1.0, 3.0]]))
+p_tableau = simplex_method(_p_tableau)
 d_tableau = simplex_method(_d_tableau)
 
-# Display the final tableau
+# print("\nBefore", _p_tableau)
+print("\nAfter", p_tableau)
+# print("\nBefore", _d_tableau)
 print("\nAfter", d_tableau)
+
 assert d_tableau[0, -1] == p_tableau[0, -1]
+print(d_tableau[0, -1])
