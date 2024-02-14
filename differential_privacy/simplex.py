@@ -116,25 +116,3 @@ d_tableau = simplex_method(_d_tableau)
 # Display the final tableau
 print("\nAfter", d_tableau)
 assert d_tableau[0, -1] == p_tableau[0, -1]
-
-# _tableau = np.array(
-#     [
-#         [ 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0],
-#         [ 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 2254000.0*1.05],
-#         [ 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2254000.0*0.95],
-#     ]
-# )
-# print("\nBefore", _tableau)
-
-# tableau = simplex_method(_tableau)
-
-# # Display the final tableau
-# print("\nAfter", tableau)
-
-# _transposed = np.array(
-#     [
-#         [ 1.0,-2254000.0*1.05,-2254000.0*0.95, 0.0, 0.0, 0.0],
-#         [ 0.0, 1.0, 1.0, 1.0, 0.0, -1.0],
-#         [ 0.0, 1.0, 1.0, 0.0, 1.0, -1.0],
-#     ]
-# )
