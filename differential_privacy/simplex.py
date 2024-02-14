@@ -28,14 +28,15 @@ def init_prime_tableau(coeffs, constraints):
 def init_dual_tableau(coeffs, constraints):
     coeffs = np.array(coeffs)
     constraints = np.array(constraints)
-
+    constraints[:,-1] = -constraints[:,-1]
+    
     # Add zero coefficients for the slack variable and RHS
-    obj = np.concatenate((coeffs, [0] * (len(constraints) + 1)))
+    obj = np.concatenate((constraints[:,-1], [0] * (len(coeffs) + 1)))
 
     # The constraints coefficients
-    eyes = np.eye(len(constraints))
-    last_col = constraints[:, -1].reshape(-1, 1)
-    constraints_ = constraints[:, :-1]
+    eyes = np.eye(len(coeffs))
+    last_col = coeffs.reshape(-1, 1)
+    constraints_ = constraints[:, :-1].T
     concatenated = np.hstack((constraints_, eyes))
     constraints = np.hstack((concatenated, last_col))
 
@@ -108,10 +109,8 @@ print("\nAfter", p_tableau)
 
 _d_tableau = init_dual_tableau(coeffs, constraints)
 
-assert np.array_equal(_d_tableau, np.array([[1.0, -10.0, -8.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 2.0], [0.0, 2.0, 1.0, 0.0, 1.0, 3.0]]))
-
 print("\nBefore", _d_tableau)
-
+assert np.array_equal(_d_tableau, np.array([[1.0, -10.0, -8.0, 0.0, 0.0, 0.0], [0.0, 1.0, 2.0, 1.0, 0.0, 2.0], [0.0, 2.0, 1.0, 0.0, 1.0, 3.0]]))
 d_tableau = simplex_method(_d_tableau)
 
 # Display the final tableau
