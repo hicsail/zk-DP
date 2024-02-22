@@ -10,7 +10,7 @@ zk-differential privacy project provides an E2E pipeline, under picoZK, to test 
 
 Run this in command line:
 ```
-docker run --platform linux/amd64 -it hicsail/zk-copyright:main      
+docker run --platform linux/amd64 -it hicsail/zk-dp:main      
 ```
 
 <strong> Option B Clone Repo </strong>
