@@ -1,4 +1,4 @@
-# zk-dp
+# zk-DP
 
 zk-differential privacy project provides an E2E pipeline, under picoZK, to test differential privacy under Zero-Knowledge Proof.
 
