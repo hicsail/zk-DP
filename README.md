@@ -83,4 +83,10 @@ You can run your python script in docker shell and compile by picozk in the foll
 /bin/bash ./run_IR0.sh -f differential_privacy
 ```
 
-This runs <a href="https://github.com/hicsail/zk-DP/blob/main/differential_privacy.py">    differential_privacy.py</a><br>
+This runs <a href="https://github.com/hicsail/zk-DP/blob/main/differential_privacy.py">    differential_privacy.py</a> and checks format of the output statements.<br>
+
+
+Alternatively, you can run just the Python statement as below inside the container:
+```
+python3 differential_privacy.py
+```
