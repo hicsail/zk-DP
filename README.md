@@ -83,7 +83,7 @@ You can run your Python script in the docker shell and check the format of state
 /bin/bash ./run_IR0.sh -f differential_privacy
 ```
 
-This runs <a href="https://github.com/hicsail/zk-DP/blob/main/differential_privacy.py">    differential_privacy.py</a> and checks format of the output statements.<br>
+This runs <a href="https://github.com/hicsail/zk-DP/blob/main/differential_privacy.py">   differential_privacy.py</a> and checks format of the output statements.<br>
 
 
 Alternatively, you can run just the Python statement inside the container:
