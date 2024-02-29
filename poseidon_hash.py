@@ -1,12 +1,15 @@
 # import numpy as np
 from picozk import *
+
 # import picozk.poseidon_hash.poseidon_round_numbers as rn
 # import picozk.poseidon_hash.poseidon_round_constants as rc
 # import galois
 # from math import log2, ceil
 import pickle
+
 # from picozk import config
 # from picozk.functions import picozk_function
+
 
 def dot(v, m):
     return [sum([a + b for a, b in zip(v, r)]) for r in m]
@@ -117,7 +120,6 @@ class PoseidonHash:
 
         # with open("consts/" + const_file, "wb") as file:
         #     pickle.dump(constants_data, file)
-
 
     def s_box(self, element):
         return pow(element, self.alpha, self.p)
