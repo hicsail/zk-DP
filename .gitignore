@@ -6,3 +6,4 @@ output_*.csv
 *ins
 *.pyc
 DP_analysis.csv
+myenv
