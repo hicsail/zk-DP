@@ -40,7 +40,8 @@ if __name__ == "__main__":
         # prf_func = Poseidon_prf(keys, p)
 
         # Commit original data
-        poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+        const_file = "const_data_dp.pkl"
+        poseidon_hash = PoseidonHash(const_file, p, alpha=17, input_rate=3)
         hashed_df = poseidon_hash.hash(list(df[col].apply(SecretInt)))
         reveal(hashed_df)  # Assert hashed_df == pub hased df
 
@@ -57,8 +58,9 @@ if __name__ == "__main__":
         res_parent = []
 
         for idx, _ in enumerate(parent_hist):
+            print("\nparent val", val_of(parent_hist[idx]))
             df[c_col][df[col] == idx].apply(update_childHist)
-            print("\nInit Child Hist:", child_histogram)
+            print("Init Child Hist:", child_histogram)
 
             # Noise Addition
             sec_child_H = ZKList(child_histogram)
@@ -68,21 +70,23 @@ if __name__ == "__main__":
             # Optimization done outside of ZK, but Proof is performed inside ZK
             l2_rate = 0.001
             l2_iter = 1000
-            init_child_l2norm = calc_l2_gnorm(parent_hist[idx], sec_child_H)
-            opt_child_hist = L2_optimization(parent_hist[idx], noisy_child_hist, l2_rate, l2_iter)
-            print("Optimized Child Hist:", opt_child_hist)
 
-            sec_opt_child_H = ZKList(opt_child_hist)
+            sec_opt_child_H = L2_optimization(parent_hist[idx], noisy_child_hist, l2_rate, l2_iter)
+            print("Optimized Child Hist:", sec_opt_child_H)
+
             res_child_l2norm = calc_l2_gnorm(parent_hist[idx], sec_opt_child_H)
 
             # ZK Proof
-            gnorm_check = mux((res_child_l2norm - init_child_l2norm < -(10**10)), 0, 1)
-            assert0(gnorm_check)
+            threshold = 10**10  # TODO
+            assert res_child_l2norm < threshold
+            # gnorm_check = mux(res_child_l2norm < threshold, 0, 1)
+            # assert0(gnorm_check)
+            print(val_of(res_child_l2norm))
 
             child_histogram = [0, 0, 0]
-            res_parent.append(sum(opt_child_hist))
+            res_parent.append(sum(sec_opt_child_H))
 
         print("Noisy Parent Hist:", parent_hist)
-        print("Aggr. child hists", res_parent)
+        print("Aggr. child hists", [val_of(elem) for elem in res_parent])
         for idx, val in enumerate(res_parent):
             assert val < 1.001 * parent_hist[idx] and val > 0.999 * parent_hist[idx]

@@ -58,7 +58,8 @@ if __name__ == "__main__":
         print("Init  Hist:", histogram)
 
         with PicoZKCompiler("irs/picozk_test", field=[p], options=["ram"]):
-            poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+            const_file = "const_data_dp.pkl"
+            poseidon_hash = PoseidonHash(const_file, p, alpha=17, input_rate=3)
             hashed_df = poseidon_hash.hash(list(df[col].apply(SecretInt)))
             reveal(hashed_df)  # Assert hashed_df == pub hased df
 
