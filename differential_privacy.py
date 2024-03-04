@@ -79,9 +79,6 @@ if __name__ == "__main__":
             # ZK Proof
             threshold = 10**10  # TODO
             assert res_child_l2norm < threshold
-            # gnorm_check = mux(res_child_l2norm < threshold, 0, 1)
-            # assert0(gnorm_check)
-            print(val_of(res_child_l2norm))
 
             child_histogram = [0, 0, 0]
             res_parent.append(sum(sec_opt_child_H))
