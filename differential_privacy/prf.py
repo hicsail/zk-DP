@@ -8,11 +8,12 @@ from datetime import datetime
 
 
 def get_beacon(p):
-    beaconVal = NistBeacon.get_last_record()
+    beaconVal = None
+    while beaconVal is None:
+        beaconVal = NistBeacon.get_last_record()
+
     beacon_hex = beaconVal.output_value
     beacon = int(beacon_hex, 16) % p  # Convert hexadecimal string to integer
-    # now = datetime.now()
-    # print(" ", now, ":", beacon)
     return beacon
 
 
@@ -22,7 +23,8 @@ class Poseidon_prf:
             raise ValueError("Keys for Poseidon prf must be list")
 
         beacon = get_beacon(p)
-        self.poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+        const_file = "const_data_dp.pkl"
+        self.poseidon_hash = PoseidonHash(const_file, p, alpha=17, input_rate=3)
         self._key = self.poseidon_hash.hash(keys)
         self._key ^= beacon
         self.p = p
@@ -41,7 +43,8 @@ class TripleDES_prf:
             raise ValueError("Keys for TripleDES must be list")
 
         beacon = get_beacon(p)  # Public Randomness
-        poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+        const_file = "const_data_dp.pkl"
+        poseidon_hash = PoseidonHash(const_file, p, alpha=17, input_rate=3)
         _keys = []
 
         for key in keys:
@@ -78,7 +81,8 @@ class AES_prf:
             raise ValueError("Key for AES must be length of 1")
 
         beacon = get_beacon(p)  # Public Randomness
-        poseidon_hash = PoseidonHash(p, alpha=17, input_rate=3)
+        const_file = "const_data_dp.pkl"
+        poseidon_hash = PoseidonHash(const_file, p, alpha=17, input_rate=3)
         _key = poseidon_hash.hash(key)  # Secret Randomness
         _key ^= beacon
         self.prf_func = AES(_key)

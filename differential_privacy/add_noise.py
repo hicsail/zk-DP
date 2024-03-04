@@ -1,5 +1,4 @@
 from picozk import *
-from picozk.poseidon_hash import PoseidonHash
 from .laplase import gen_laplace_table
 
 
