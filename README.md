@@ -85,8 +85,14 @@ You can run your Python script in the docker shell and check the format of state
 
 This runs <a href="https://github.com/hicsail/zk-DP/blob/main/differential_privacy.py">   differential_privacy.py</a> and checks format of the output statements.<br>
 
-
 Alternatively, you can run just the Python statement inside the container:
 ```
 python3 differential_privacy.py
 ```
+
+## 🧪 Experiment with Different Pseudorandom function
+
+
+This system utilizes a Pseudorandom Function (PRF) as an integral part of the noise addition process. The current file employs AES as the default PRF. However, you can switch to Triple DES or Poseidon Hash PRF as well in <a href="https://github.com/hicsail/zk-DP/blob/cdb360f8276e12c73c69d4dba7472be12b96c42f/differential_privacy.py#L38_L40"> differential_privacy.py </a>.
+
+<img width="604" alt="image" src="https://github.com/hicsail/zk-DP/assets/62607343/e2ab8f95-ed56-4de5-b4b7-7a90faef7b19">
