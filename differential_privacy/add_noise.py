@@ -36,5 +36,4 @@ def add_noise(sec_H, p, prf_func):
         check = before + lap_draw - noisy_hist[i]
         assert0(check)
 
-    noisy_hist = [val_of(elem) for elem in noisy_hist]
     return noisy_hist
