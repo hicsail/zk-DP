@@ -69,7 +69,6 @@ if __name__ == "__main__":
 
             # Optimization done outside of ZK, but Proof is performed inside ZK
             l2_iter = 1500
-
             sec_opt_child_H = L2_optimization(parent_hist[idx], noisy_child_hist, l2_iter)
             print("Optimized Child Hist:", sec_opt_child_H)
 
