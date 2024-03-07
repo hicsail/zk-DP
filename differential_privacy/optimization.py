@@ -9,9 +9,9 @@ def bit_decompose(x, num_bits):
 
     new_x = 0
     for i, sb in enumerate(reversed(sbits)):
-        pzk.assert0((sb - 1) * sb) # asserting that it's a bit val (0 or 1)
+        pzk.assert0((sb - 1) * sb)  # asserting that it's a bit val (0 or 1)
         new_x += 2**i * sb
-    pzk.assert0(new_x - x) # validating that the decomposition was properly performed
+    pzk.assert0(new_x - x)  # validating that the decomposition was properly performed
 
     return sbits
 
