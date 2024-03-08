@@ -34,7 +34,7 @@ docker-compose up -d --build                   # Inside the root directory, run 
 
 #### 🖥️ Getting started
 
-<strong> Step1: Enter Docker Shell</strong> 
+<i> <strong> Step1: Enter Docker Shell</strong> </i> 
 
 Since you have a running container, you can subsequently run the following command in your terminal to start Docker Shell:
 
@@ -53,7 +53,7 @@ If you see something like the following in your command line, you are successful
 </ul>
 
 
-<strong> Step2: Install wiztoolkit</strong> 
+<i> <strong> Step2: Install wiztoolkit</strong> </i> 
 
 We are using Fire Alarm, one of wiztoolkit packages.
 After entering the container, clone wiztoolkit repo and run the following commands to install wiztoolkit:
@@ -86,7 +86,7 @@ Run this in the command line:
 git clone git@github.com:hicsail/zk-DP.git
 ```
 
-Move into the root directory of the project
+Move into the root directory of the project and install dependencies
 
 ```
 cd zk-DP
@@ -97,7 +97,8 @@ pip install --upgrade pip
 pip install -r requirements.txt
 pip install picozk/.
 ```
-The following will 
+
+The following will run the main file:
 ```
 python3 differential_privacy.py  # or pypy3 differential_privacy.py
 ```
