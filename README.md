@@ -1,44 +1,40 @@
 # zk-DP
 
-zk-differential privacy project provides an E2E pipeline, under picoZK, to test differential privacy under Zero-Knowledge Proof.
+This zk-differential privacy repository provides an E2E pipeline, supported by picozk, to test differential privacy under Zero-Knowledge Proof.
 
 ----
 
-## 📖 Setting up
+## Quick Navigation
 
-<strong> Option A Use published docker image </strong>
+- [Use Docker](#-use-docker)
+- [Run Locally](#-run-locally)
+- [Variety of PRF](#-variety-of-prf)
 
-Run this in the command line:
+## 🐳 [Use Docker](#-use-docker)
+
+
+#### 🚧 Build Docker Image and Run Container
+
+##### <ins><i> Option A Use published docker image </i> </ins>
+
+Run this line of code in the command line:
+
 ```
 docker run --platform linux/amd64 -it hicsail/zk-dp:main      
 ```
 
-<strong> Option B Clone Repo </strong>
+##### <ins><i> Option B Clone Repo </i> </ins>
 
-Run this in the command line:
+Run the following in the command line to get the container up and running:
 ```
-git clone git@github.com:hicsail/zk-DP.git
-```
-
-Move into the root directory of the project
-
-```
-cd zk-DP
+git clone git@github.com:hicsail/zk-DP.git     # Clone the repository
+cd zk-DP                                       # Move into the root directory of the project
+docker-compose up -d --build                   # Inside the root directory, run the build image:
 ```
 
-Inside the root directory, run the build image:
+#### 🖥️ Getting started
 
-```
-docker-compose up -d --build
-```
-
-Now you have a brand new container running on your machine
-
-
-
-## 🖥️ Getting started
-
-<strong> Enter Docker Shell</strong> 
+##### <ins><i> Step1: Enter Docker Shell</i> </ins>
 
 Since you have a running container, you can subsequently run the following command in your terminal to start Docker Shell:
 
@@ -46,7 +42,7 @@ Since you have a running container, you can subsequently run the following comma
 docker exec -it <containerID> bash
 ```
 
-You can get a containerID from the docker desktop app by clicking the small button highlighted in the red circle
+You can get a container-ID from the docker desktop app by clicking the small button highlighted in the red circle
 <ul>
     <img width="1161" alt="image" src="https://user-images.githubusercontent.com/62607343/203409123-1a95786f-8b2a-4e71-a920-3a51cf50cf0f.png">
 </ul>
@@ -57,41 +53,57 @@ If you see something like the following in your command line, you are successful
 </ul>
 
 
-<strong> Install wiztoolkit</strong> 
+##### <ins><i> Step2: Install wiztoolkit</i> </ins>
 
-Inside the container, clone wiztoolkit repo and move into wiztoolkit:
+We are using Fire Alarm, one of wiztoolkit packages.
+After entering the container, clone wiztoolkit repo and run the following commands to install wiztoolkit:
 
-(*) You might need to set up ssh key - Follow <a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent?platform=linux"> the instruction </a>
+(* You might need to set up ssh key - Follow <a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent?platform=linux"> the instruction </a>)
 
 ```
 git clone git@github.mit.edu:sieve-all/wiztoolkit.git
 cd wiztoolkit
-```
-
-And run the following commands to install wiztoolkit (Backend for IR0):
-
-```
 make
 make install
 ```
 
-## 🏋️‍♀️ Run your Python script and firealarm test module inside the container
 
-You can run your Python script in the docker shell and check the format of statements in the following command:
+### 🏋️‍♀️ Run shell script
+
+Now all setups are done for you to run your Python script inside the docker shell.
+Run the following command in the docker shell, and you will see the Python script,<a href="https://github.com/hicsail/zk-DP/blob/main/differential_privacy.py">   differential_privacy.py</a>, generating zk statements and fire-alarm checks the format of the statements:
 
 ```
 /bin/bash ./run_IR0.sh -f differential_privacy
 ```
 
-This runs <a href="https://github.com/hicsail/zk-DP/blob/main/differential_privacy.py">   differential_privacy.py</a> and checks format of the output statements.<br>
+## 👨‍💻 [Run Locally](#-run-locally)
 
-Alternatively, you can run just the Python statement inside the container:
+This option doesn't require Docker, while it focuses on running the Python scripts, skipping setting Fire Alarm.
+
+Run this in the command line:
 ```
-python3 differential_privacy.py
+git clone git@github.com:hicsail/zk-DP.git
 ```
 
-## 🧪 Experiment with Different Pseudorandom function
+Move into the root directory of the project and install dependencies
 
+```
+cd zk-DP
+cp ./consts/poseidon_hash.py ./picozk/picozk/poseidon_hash/poseidon_hash.py
+python3 -m venv venv           # or pypy3 -m venv myenv
+source venv/bin/activate       # or source myenv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install picozk/.
+```
+
+The following will run the main file:
+```
+python3 differential_privacy.py  # or pypy3 differential_privacy.py
+```
+
+## 🧪 [Variety of PRF](#-variety-of-prf)
 
 This system utilizes a Pseudorandom Function (PRF) as an integral part of the noise addition process. The current file employs AES as the default PRF. However, you can switch to Triple DES or Poseidon Hash PRF as well in <a href="https://github.com/hicsail/zk-DP/blob/cdb360f8276e12c73c69d4dba7472be12b96c42f/differential_privacy.py#L38_L40"> differential_privacy.py </a>.
 

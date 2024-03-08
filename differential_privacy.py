@@ -68,22 +68,21 @@ if __name__ == "__main__":
             print("Noisy Child Hist:", noisy_child_hist)
 
             # Optimization done outside of ZK, but Proof is performed inside ZK
-            l2_rate = 0.001
-            l2_iter = 1000
-
-            sec_opt_child_H = L2_optimization(parent_hist[idx], noisy_child_hist, l2_rate, l2_iter)
+            l2_iter = 1500
+            sec_opt_child_H = L2_optimization(parent_hist[idx], noisy_child_hist, l2_iter)
             print("Optimized Child Hist:", sec_opt_child_H)
 
             res_child_l2norm = calc_l2_gnorm(parent_hist[idx], sec_opt_child_H)
 
             # ZK Proof
-            threshold = 10**10  # TODO
-            assert res_child_l2norm < threshold
+            threshold = 10**6
+            assert0(mux(res_child_l2norm < threshold, 0, 1))
 
             child_histogram = [0, 0, 0]
             res_parent.append(sum(sec_opt_child_H))
 
         print("Noisy Parent Hist:", parent_hist)
         print("Aggr. child hists", [val_of(elem) for elem in res_parent])
-        for idx, val in enumerate(res_parent):
-            assert val < 1.001 * parent_hist[idx] and val > 0.999 * parent_hist[idx]
+        for idx, sec_val in enumerate(res_parent):
+            val = val_of(sec_val)
+            assert val < 1.001 * val_of(parent_hist[idx]) and val > 0.999 * val_of(parent_hist[idx])
