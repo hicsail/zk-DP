@@ -8,7 +8,7 @@ This zk-differential privacy repository provides an E2E pipeline, supported by p
 
 - [Use Docker](#-use-docker)
 - [Run Locally](#-run-locally)
-- [Variety of PRF](#variety-of-prf)
+- [Variety of PRF](#-variety-of-prf)
 
 ## 🐳 [Use Docker](#-use-docker)
 
@@ -101,7 +101,7 @@ You can run just the Python statement inside the container:
 python3 differential_privacy.py
 ```
 
-## 🧪 [Variety of PRF](#variety-of-prf)
+## 🧪 [Variety of PRF](#-variety-of-prf)
 
 This system utilizes a Pseudorandom Function (PRF) as an integral part of the noise addition process. The current file employs AES as the default PRF. However, you can switch to Triple DES or Poseidon Hash PRF as well in <a href="https://github.com/hicsail/zk-DP/blob/cdb360f8276e12c73c69d4dba7472be12b96c42f/differential_privacy.py#L38_L40"> differential_privacy.py </a>.
 
