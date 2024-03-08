@@ -91,14 +91,15 @@ Move into the root directory of the project
 ```
 cd zk-DP
 cp ./consts/poseidon_hash.py ./picozk/picozk/poseidon_hash/poseidon_hash.py
+python3 -m venv venv           # or pypy3 -m venv myenv
+source venv/bin/activate       # or source myenv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install picozk/.
 ```
-
-You can run just the Python statement inside the container:
+The following will 
 ```
-python3 differential_privacy.py
+python3 differential_privacy.py  # or pypy3 differential_privacy.py
 ```
 
 ## 🧪 [Variety of PRF](#-variety-of-prf)
