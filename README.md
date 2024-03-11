@@ -2,6 +2,10 @@
 
 This zk-differential privacy repository provides an E2E pipeline, supported by picozk, to test differential privacy under Zero-Knowledge Proof.
 
+## Project Objective
+This project implements <a href="https://arxiv.org/abs/2009.03777"> the mechanism described in this paper </a>, using a zero-knowledge proof scheme to show that the noise added to census data is appropriately computed. 
+It utilizes a pseudo-random generator and follows the Laplacian Distribution.
+
 ----
 
 ## Quick Navigation
