@@ -94,6 +94,7 @@ Move into the root directory of the project and install dependencies
 
 ```
 cd zk-DP
+git clone https://github.com/uvm-plaid/picozk.git
 cp ./consts/poseidon_hash.py ./picozk/picozk/poseidon_hash/poseidon_hash.py
 python3 -m venv venv           # or pypy3 -m venv myenv
 source venv/bin/activate       # or source myenv/bin/activate
