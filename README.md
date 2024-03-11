@@ -31,7 +31,7 @@ docker run --platform linux/amd64 -it hicsail/zk-dp:main
 
 Run the following in the command line to get the container up and running:
 ```
-git clone git@github.com:hicsail/zk-DP.git     # Clone the repository
+git clone https://github.com/hicsail/zk-DP.git # Clone the repository
 cd zk-DP                                       # Move into the root directory of the project
 docker-compose up -d --build                   # Inside the root directory, run the build image:
 ```
