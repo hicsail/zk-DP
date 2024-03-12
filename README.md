@@ -2,6 +2,10 @@
 
 This zk-differential privacy repository provides an E2E pipeline, supported by picozk, to test differential privacy under Zero-Knowledge Proof.
 
+## Project Objective
+This project implements <a href="https://arxiv.org/abs/2009.03777"> the mechanism described in this paper </a>, using a zero-knowledge proof scheme to show that the noise added to census data is appropriately computed. 
+It utilizes a pseudo-random generator and follows the Laplacian Distribution.
+
 ----
 
 ## Quick Navigation
@@ -27,7 +31,7 @@ docker run --platform linux/amd64 -it hicsail/zk-dp:main
 
 Run the following in the command line to get the container up and running:
 ```
-git clone git@github.com:hicsail/zk-DP.git     # Clone the repository
+git clone https://github.com/hicsail/zk-DP.git # Clone the repository
 cd zk-DP                                       # Move into the root directory of the project
 docker-compose up -d --build                   # Inside the root directory, run the build image:
 ```
@@ -90,6 +94,7 @@ Move into the root directory of the project and install dependencies
 
 ```
 cd zk-DP
+git clone https://github.com/uvm-plaid/picozk.git
 cp ./consts/poseidon_hash.py ./picozk/picozk/poseidon_hash/poseidon_hash.py
 python3 -m venv venv           # or pypy3 -m venv myenv
 source venv/bin/activate       # or source myenv/bin/activate
