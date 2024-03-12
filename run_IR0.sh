@@ -40,9 +40,6 @@ fi
 # Copying a designated statement file
 
 dir="/usr/src/app/"
-orig="/code/"
-cp $orig$file.py $dir$file.py
-
 
 # Refresh the directory
 rm -r irs
@@ -52,9 +49,13 @@ mkdir -p irs
 # Actual Execution
 echo "Running $file ....";
 
-python3 $dir$file.py
-dirlist=`ls irs`
-echo $dirlist
+if python3 $dir$file.py; then
+    dirlist=`ls irs`
+    echo $dirlist
+else
+    echo "Error in the Python Script"
+    exit 1
+fi
 
 # firealarm format check
 
@@ -69,18 +70,20 @@ if ! command -v wtk-firealarm >/dev/null 2>&1; then
 fi
 
 
-# Creat dir
-mkdir -p irs/wit
-mkdir -p irs/ins
-
 # Run firealarm test
-cd irs && wtk-firealarm $dirlist && cd ..
+cd irs
 
-if wtk-firealarm "$rel" "$wit" "$ins"; then
+if wtk-firealarm $dirlist; then
+    cd ..
     echo "wtk-firealarm successfully completed"
 else
     echo "Error during wtk-firealarm"
+    exit 1
 fi
+
+# Creat dir
+mkdir -p irs/wit
+mkdir -p irs/ins
 
 # Copy into directory compatible with mac-and-cheese
 for ir in ${dirlist}
@@ -88,13 +91,11 @@ for ir in ${dirlist}
         if [[ "irs/$ir" == *.ins ]]
             then
                 # if it has, move it to irs/ins
-                mv ./irs/$ir ./irs/ins/$ir
+                mv $dir/irs/$ir $dir/irs/ins/$ir
         fi
         if [[ "irs/$ir" == *.wit ]]
             then
                 # if it has, move it to irs/ins
-                mv ./irs/$ir ./irs/wit/$ir
+                mv $dir/irs/$ir $dir/irs/wit/$ir
         fi
 done
-# copy the irs into local
-cp -r ./irs /code
